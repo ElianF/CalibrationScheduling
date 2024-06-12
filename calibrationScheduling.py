@@ -13,14 +13,15 @@ class Context:
         return [x, y]
 
 
-class Model:
+class Solution:
     def __init__(self, displayedPredicates):
-        self.done = False
-        self.model = None
         self.displayedPredicates = displayedPredicates
+        self.models = list()
+
     
-    def __str__(self):
-        inp = str(self.model)
+    def processModel(self, model):
+        inp = str(model)
+        self.models.append(model)
 
         pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
         solutions = re.findall(pattern, inp)
@@ -33,14 +34,11 @@ class Model:
         solutions = [f'{predicate}({args})' for predicate, args in solutions]
         out = '\n'.join(solutions)
 
-        return out
+        print(out)
     
-    def setModel(self, model):
-        if self.model:
-            return
-        self.model = model
-        while not self.done:
-            time.sleep(0.1) # there may be a better approach to active wating
+
+    def setSolution(self, solution):
+        self.solution = solution
 
 
 def processCommandLineArguments():
@@ -104,18 +102,8 @@ def main():
 
     # solve it and save model
     # threading is necessary because the solved model will be terminated as soon as setModel terminates
-    model = Model(config['displayedPredicates'])
-    thread = Thread(target=ctl.solve, args=[tuple(), model.setModel])
-    thread.start()
-    while not model.model:
-        time.sleep(0.1) # there may be a better approach to active wating
-
-    # print results to terminal; one may alter the output within the __str__ method of Model
-    print(model)
-
-    # terminate program
-    model.done = True
-    thread.join()
+    solution = Solution(config['displayedPredicates'])
+    ctl.solve(on_model=solution.processModel, on_finish=solution.setSolution)
 
 
 if __name__ == '__main__':
