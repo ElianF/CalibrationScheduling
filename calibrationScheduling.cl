@@ -1,0 +1,1 @@
+isPump(P) :- validPump(P, S).

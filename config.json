@@ -1,4 +1,7 @@
 {
-    "displayedPredicates": [
-    ]
+    "displayedPredicates": null,
+    "templates": {
+        "pumps": "validPump({p}, {s}).",
+        "components": "isComp({c}, {lo}, {hi}, {a})."
+    }
 }
