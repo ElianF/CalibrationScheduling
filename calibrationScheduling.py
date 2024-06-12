@@ -39,6 +39,7 @@ class Solution:
 
     def setSolution(self, solution):
         self.solution = solution
+        print(self.solution)
 
 
 def processCommandLineArguments():
@@ -103,7 +104,7 @@ def main():
     # solve it and save model
     # threading is necessary because the solved model will be terminated as soon as setModel terminates
     solution = Solution(config['displayedPredicates'])
-    ctl.solve(on_model=solution.processModel, on_finish=solution.setSolution)
+    ctl.solve(on_model=solution.processModel, on_unsat=print, on_statistics=lambda x, y: map(print, [x, y]), on_finish=print, on_core=print)
 
 
 if __name__ == '__main__':

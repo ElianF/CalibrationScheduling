@@ -1,7 +1,16 @@
 {
-    "displayedPredicates": null,
+    "displayedPredicates": [
+        "validMess",
+        "_isPumpUsed",
+        "_isCompUsed",
+        "isMess",
+        "_isComp",
+        "_isCompInterval",
+        "isCompComplete",
+        "z"
+    ],
     "templates": {
         "pumps": "validPump({p}, {s}).",
-        "components": "isComp({c}, {lo}, {hi}, {a})."
+        "components": "isCompInterval({c}, {lo}, {hi}, {a})."
     }
 }
