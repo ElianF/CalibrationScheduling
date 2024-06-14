@@ -19,14 +19,25 @@ class Solution:
         self.models = list()
  
     def __str__(self):
-        return '\n'.join(self)
+        return '\n'.join([f'# {n}\n{model}\n' for n, model in enumerate(self)])
     
     def __iter__(self):
-        for model in self.models:
-            yield(str(model))
+        for model, _ in self.models:
+            pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
+            solutions = re.findall(pattern, model)
+
+            for predicate, args in solutions.copy():
+                if self.displayedPredicates != None and predicate not in self.displayedPredicates:
+                    solutions.remove((predicate, args))
+            
+            solutions.sort()
+            solutions = [f'{predicate}({args})' for predicate, args in solutions]
+            if len(solutions) == 0:
+                solutions = ['.']
+            yield '\n'.join(solutions)
 
     def addModel(self, model):
-        self.models.append(model.symbols(atoms=True))
+        self.models.append((str(model), model.symbols(atoms=True)))
 
 
 
@@ -95,8 +106,11 @@ def main():
     ctl.solve(on_model=solution.addModel)
 
     # print models
-    for model, _ in zip(solution, range(10)):
+    # print(solution)
+    for n, model in zip(range(10), solution):
+        print(f'# {n}')
         print(model)
+        print()
 
 if __name__ == '__main__':
     main()
