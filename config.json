@@ -4,10 +4,15 @@
         "_isPump", 
         "_isSetting", 
         "_isComp",
-        "validMess"
+        "_validPump",
+        "_defComp",
+        "validMess",
+        "_id1Mess",
+        "_id2Mess",
+        "z"
     ],
     "templates": {
         "pumps": "validPump({p}, {s}).",
-        "components": "defComp({c}, {lo}, {hi}, {n})."
+        "components": "defComp({c}, {lo}, {hi}, {n}, {z})."
     }
 }

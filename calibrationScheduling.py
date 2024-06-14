@@ -77,12 +77,12 @@ def generateFacts(args, templates:dict):
         while re.search('\{\w+?\}', template) != None:
             template = re.sub('\{\w+?\}', '{x['+str(i)+']}', template, count=1)
             i += 1
-        for x in args.__dict__[type]:
+        for n, x in enumerate(args.__dict__[type]):
             if type == 'pumps':
                 for y in range(x[1], x[2]+1, x[3]):
                     yield template.format(x=[x[0], y])
             elif type == 'components':
-                yield template.format(x=x)
+                yield template.format(x=[*x, 2**n])
 
 
 def main():
