@@ -17,6 +17,7 @@ class Solution:
     def __init__(self, displayedPredicates):
         self.displayedPredicates = displayedPredicates
         self.models = list()
+        self.lenModels = 0
  
     def __str__(self):
         return '\n'.join([f'# {n}\n{model}\n' for n, model in enumerate(self)])
@@ -37,6 +38,8 @@ class Solution:
             yield '\n'.join(solutions)
 
     def addModel(self, model):
+        self.lenModels += 1
+        print(self.lenModels, end='\r')
         self.models.append((str(model), model.symbols(atoms=True)))
 
 
@@ -101,18 +104,29 @@ def main():
     ctl.ground([("base", [])], context=Context())
     ctl.configuration.solve.models = "0"
 
-    # solve it and save model
     solution = Solution(config['displayedPredicates'])
-    ctl.solve(on_model=solution.addModel)
+    if (n:=config['count']) <= 0:
+        # solve it and total number of models and time necessary
+        t0 = time.time()
+        ctl.solve(on_model=solution.addModel)
+        t1 = time.time() - t0
+      
+        print(solution.lenModels)
 
-    # print models
-    # print(solution)
-    for n, model in zip(range(20), solution):
-        print(f'# {n}')
-        print(model)
-        print()
+    else:
+        # solve it partially and print every calculated without statistics
+        with ctl.solve(yield_=True) as handle:
+            t0 = time.time()
+            for _, model in zip(range(n), handle):
+                solution.addModel(model)
+            t1 = time.time() - t0
+        
+        for n, model in zip(range(n), solution):
+            print(f'# {n}')
+            print(model)
+            print()
     
-    print(len(list(solution)))
+    print(t1)
 
 
 if __name__ == '__main__':
