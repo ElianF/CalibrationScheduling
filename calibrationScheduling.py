@@ -17,29 +17,17 @@ class Solution:
     def __init__(self, displayedPredicates):
         self.displayedPredicates = displayedPredicates
         self.models = list()
-
+ 
+    def __str__(self):
+        return '\n'.join(self)
     
-    def processModel(self, model):
-        inp = str(model)
-        self.models.append(model)
+    def __iter__(self):
+        for model in self.models:
+            yield(str(model))
 
-        pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
-        solutions = re.findall(pattern, inp)
+    def addModel(self, model):
+        self.models.append(model.symbols(atoms=True))
 
-        for predicate, args in solutions.copy():
-            if self.displayedPredicates != None and predicate not in self.displayedPredicates:
-                solutions.remove((predicate, args))
-        
-        solutions.sort()
-        solutions = [f'{predicate}({args})' for predicate, args in solutions]
-        out = '\n'.join(solutions)
-
-        print(out)
-    
-
-    def setSolution(self, solution):
-        self.solution = solution
-        print(self.solution)
 
 
 def processCommandLineArguments():
@@ -100,12 +88,19 @@ def main():
     ctl.load('calibrationScheduling.cl')
     # ground it with some helper methods in Context
     ctl.ground([("base", [])], context=Context())
+    ctl.configuration.solve.models = "0"
 
     # solve it and save model
-    # threading is necessary because the solved model will be terminated as soon as setModel terminates
     solution = Solution(config['displayedPredicates'])
-    ctl.solve(on_model=solution.processModel, on_unsat=print, on_statistics=lambda x, y: map(print, [x, y]), on_finish=print, on_core=print)
+    ctl.solve(on_model=solution.addModel)
 
+    # print models
+    for model, _ in zip(solution, range(10)):
+        print(model)
 
 if __name__ == '__main__':
     main()
+    # try:
+    #     main()
+    # except:
+    #     pass
