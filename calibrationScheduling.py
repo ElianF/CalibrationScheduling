@@ -107,14 +107,16 @@ def main():
 
     # print models
     # print(solution)
-    for n, model in zip(range(10), solution):
+    for n, model in zip(range(20), solution):
         print(f'# {n}')
         print(model)
         print()
+    
+    print(len(list(solution)))
+
 
 if __name__ == '__main__':
-    main()
-    # try:
-    #     main()
-    # except:
-    #     pass
+    try:
+        main()
+    except:
+        pass
