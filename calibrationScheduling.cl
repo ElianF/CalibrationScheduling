@@ -22,3 +22,6 @@ id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 % uniqueness
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P',          C != C'. % every pump gets unique component 
 :- validMess(M, P, S, C), validMess(M, P', S', C'),          S != S', C  = C'. % every component gets unique setting
+
+% soft constraints
+#minimize { M@1, M : validMess(M, P, S, C) }.
