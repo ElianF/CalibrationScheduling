@@ -4,6 +4,7 @@ from threading import Thread
 import time
 import re
 import json
+import pandas as pd
 
 
 class Context:
@@ -31,10 +32,18 @@ class Solution:
                 if self.displayedPredicates != None and predicate not in self.displayedPredicates:
                     solutions.remove((predicate, args))
             
-            solutions.sort()
-            solutions = [f'{predicate}({args})' for predicate, args in solutions]
-            if len(solutions) == 0:
-                solutions = ['.']
+            mess = pd.DataFrame(index=list(), columns=list())
+            for predicate, args in solutions:
+                m, p, s, c = args.split(',')
+                mess.loc[m, p] = f'{c}+{s}'
+            mess = mess.sort_index()
+            solutions = [str(mess.transpose())]
+                
+            # solutions.sort()
+            # solutions = [f'{predicate}({args})' for predicate, args in solutions]
+            # if len(solutions) == 0:
+            #     solutions = ['.']
+
             yield '\n'.join(solutions)
 
     def addModel(self, model):
@@ -130,7 +139,8 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except:
-        pass
+    main()
+    # try:
+    #     main()
+    # except:
+    #     pass
