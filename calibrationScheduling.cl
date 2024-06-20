@@ -1,5 +1,5 @@
 % computation basis
-isMess(1..X) :- X' = #sum{_N, _C : defComp(_C, _Lo, _Hi, _N, _Z)}, X = (X'+1) / 2.
+isMess(1..X) :- X' = #sum{_N, _C : defComp(_C, _Lo, _Hi, _N, _Z)}, X = X' / 2.
 isPump(P) :- validPump(P, S).
 isComp(C) :- defComp(C, Lo, Hi, N, Z).
 
@@ -11,6 +11,8 @@ isComp(C) :- defComp(C, Lo, Hi, N, Z).
 % every component is measured often enough
 :- #count{_M : validMess(_M, _P, _S, C)} < N, defComp(C, Lo, Hi, N, Z).
 %% per measurement
+% at least two compounts are measured
+:- #count{_C : validMess(M, _P, _S, _C)} < 2, isMess(M).
 % remove redundant measurement due to symmetry
 id1Mess(M, X) :- X = #sum{_Z : validMess(M, _P, _S, _C), defComp(_C, _Lo, _Hi, _N, _Z)}, isMess(M).
 id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
@@ -21,7 +23,8 @@ id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 :- validMess(M, P, S, C), defComp(C, Lo, Hi, N, Z), Sges = #sum{_S: validMess(M, _P, _S, _C)}, Hi*Sges < S*100.
 % uniqueness
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P',          C != C'. % every pump gets unique component 
-:- validMess(M, P, S, C), validMess(M, P', S', C'),          S != S', C  = C'. % every component gets unique setting
+:- validMess(M, P, S, C), validMess(M, P', S', C'), P != P',          C  = C'. % every compount gets unique pump 
+:- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P', S != S'         . % every pump gets unique setting
 
 % soft constraints
-#minimize { M@1, M : validMess(M, P, S, C) }.
+#minimize { 1, M : validMess(M, P, S, C)}.
