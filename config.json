@@ -15,5 +15,5 @@
         "pumps": "validPump({p}, {s}).",
         "components": "defComp({c}, {lo}, {hi}, {n}, {z})."
     },
-    "count": 100
+    "count": 20
 }

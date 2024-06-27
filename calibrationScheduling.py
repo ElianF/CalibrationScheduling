@@ -109,6 +109,7 @@ def main():
     ctl.add('base', [], ' '.join(facts))
     # insert clingo code into ctl
     ctl.load('calibrationScheduling.cl')
+
     # ground it with some helper methods in Context
     ctl.ground([("base", [])], context=Context())
     ctl.configuration.solve.models = "0"
