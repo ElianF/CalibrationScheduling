@@ -105,10 +105,17 @@ def main():
 
     # insert facts from command line arguments
     args = processCommandLineArguments()
-    facts = generateFacts(args, config['templates'])
+    facts = list(generateFacts(args, config['templates']))
     ctl.add('base', [], ' '.join(facts))
     # insert clingo code into ctl
     ctl.load('calibrationScheduling.cl')
+    # output program for manual analysis
+    with open('out.cl', 'w') as file:
+        file.write('% initialisation\n')
+        file.write('\n'.join(facts))
+        file.write('\n\n% programm\n')
+        with open('calibrationScheduling.cl', 'r') as cl:
+            file.write(cl.read())
 
     # ground it with some helper methods in Context
     ctl.ground([("base", [])], context=Context())
