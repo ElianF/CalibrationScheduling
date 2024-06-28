@@ -25,8 +25,9 @@ id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P <  P', S = S', C >  C'.
 
 % ratios are within interval
-:- validMess(M, P, S, C), defComp(C, Lo, Hi, N, Z), Sges = #sum{_S: validMess(M, _P, _S, _C)}, S*100 < Lo*Sges.
-:- validMess(M, P, S, C), defComp(C, Lo, Hi, N, Z), Sges = #sum{_S: validMess(M, _P, _S, _C)}, Hi*Sges < S*100.
+isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, _C)}, R = 100 * S / Sges.
+:- isRatio(M, C, R), defComp(C, Lo, Hi, N, Z), R < Lo.
+:- isRatio(M, C, R), defComp(C, Lo, Hi, N, Z), Hi < R.
 
 % uniqueness
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P',          C != C'. % every pump gets unique component 
@@ -34,5 +35,6 @@ id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P', S != S'         . % every pump gets unique setting
 
 % soft constraints
+% optimize arrangement of measurements
 #minimize { 1@2, M: validMess(M, P, S, C)}.
 #maximize { 1@1, M, P: validMess(M, P, S, C)}.

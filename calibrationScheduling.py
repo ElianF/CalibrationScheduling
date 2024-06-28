@@ -8,14 +8,12 @@ import pandas as pd
 
 
 class Context:
-    def id(self, x):
-        return x
-    def seq(self, x, y):
-        return [x, y]
+    pass
 
 
 class Solution:
-    def __init__(self, displayedPredicates):
+    def __init__(self, classicDisplay, displayedPredicates):
+        self.classicDisplay = classicDisplay
         self.displayedPredicates = displayedPredicates
         self.models = list()
         self.lenModels = 0
@@ -32,18 +30,20 @@ class Solution:
                 if self.displayedPredicates != None and predicate not in self.displayedPredicates:
                     solutions.remove((predicate, args))
             
-            mess = pd.DataFrame(index=list(), columns=list())
-            for predicate, args in solutions:
-                m, p, s, c = args.split(',')
-                mess.loc[m, p] = f'{c}+{s}'
-            mess = mess.sort_index()
-            solutions = [str(mess.transpose())]
-                
-            # solutions.sort()
-            # solutions = [f'{predicate}({args})' for predicate, args in solutions]
-            # if len(solutions) == 0:
-            #     solutions = ['.']
-
+            if self.classicDisplay:
+                solutions.sort()
+                solutions = [f'{predicate}({args})' for predicate, args in solutions]
+                if len(solutions) == 0:
+                    solutions = ['.']
+            else:
+                mess = pd.DataFrame(index=list(), columns=list())
+                for predicate, args in solutions:
+                    if predicate == 'validMess':
+                        m, p, s, c = args.split(',')
+                        mess.loc[m, p] = f'{c}+{s}'
+                mess = mess.sort_index()
+                solutions = [str(mess.transpose())]
+            
             yield '\n'.join(solutions)
 
     def addModel(self, model):
@@ -121,7 +121,7 @@ def main():
     ctl.ground([("base", [])], context=Context())
     ctl.configuration.solve.models = "0"
 
-    solution = Solution(config['displayedPredicates'])
+    solution = Solution(config['classicDisplay'], config['displayedPredicates'])
     if (n:=config['count']) <= 0:
         # solve it and total number of models and time necessary
         t0 = time.time()

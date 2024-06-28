@@ -9,11 +9,13 @@
         "validMess",
         "_id1Mess",
         "_id2Mess",
+        "isRatio",
         "z"
     ],
     "templates": {
         "pumps": "validPump({p}, {s}).",
         "components": "defComp({c}, {lo}, {hi}, {n}, {z})."
     },
-    "count": 20
+    "count": 20,
+    "classicDisplay": false
 }
