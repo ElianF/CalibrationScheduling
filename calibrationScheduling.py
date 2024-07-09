@@ -21,50 +21,55 @@ class Solution:
     
     def __iter__(self):
         for model, _ in self.models:
-            pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
-            solutions = re.findall(pattern, model)
+            yield self.traverseModel(str(model))
 
-            if self.classicDisplay:
-                solutions.sort()
-                solutions = [f'{predicate}({args})' for predicate, args in solutions]
-                if len(solutions) == 0:
-                    solutions = ['.']
-            else:
-                comps = pd.DataFrame(index=list(), columns=list())
-                settings = pd.DataFrame(index=list(), columns=list())
-                ratios = pd.DataFrame(index=list(), columns=list())
-                distances = pd.DataFrame(index=list(), columns=['min', 'max'])
-                for predicate, args in solutions.copy():
-                    if predicate == 'validMess':
-                        m, p, s, c = args.split(',')
-                        comps.loc[m, p] = c
-                        settings.loc[m, p] = s
-                        solutions.remove((predicate, args))
-                for predicate, args in solutions.copy():
-                    if predicate == 'isRatio':
-                        m, c, r = args.split(',')
-                        mask = comps.loc[m] == c
-                        p = comps.loc[m, mask].index[0]
-                        ratios.loc[m, p] = r
-                        solutions.remove((predicate, args))
-                for predicate, args in solutions.copy():
-                    if predicate in ['maximalDistance', 'minimalDistance']:
-                        c, d = args.split(',')
-                        distances.loc[c, predicate[:3]] = d
-                        solutions.remove((predicate, args))
-                for df in [comps, settings, ratios, distances]:
-                    for i in range(2):
-                        df.sort_index(axis=i, inplace=True)
-                solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios, distances]))]
-            
-            yield '\n'.join(solutions)
+
+    def traverseModel(self, model) -> str:
+        pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
+        solutions = re.findall(pattern, str(model))
+
+        if self.classicDisplay:
+            solutions.sort()
+            solutions = [f'{predicate}({args})' for predicate, args in solutions]
+            if len(solutions) == 0:
+                solutions = ['.']
+        else:
+            comps = pd.DataFrame(index=list(), columns=list())
+            settings = pd.DataFrame(index=list(), columns=list())
+            ratios = pd.DataFrame(index=list(), columns=list())
+            distances = pd.DataFrame(index=list(), columns=['min', 'max'])
+            for predicate, args in solutions.copy():
+                if predicate == 'validMess':
+                    m, p, s, c = args.split(',')
+                    comps.loc[m, p] = c
+                    settings.loc[m, p] = s
+                    solutions.remove((predicate, args))
+            for predicate, args in solutions.copy():
+                if predicate == 'isRatio':
+                    m, c, r = args.split(',')
+                    mask = comps.loc[m] == c
+                    p = comps.loc[m, mask].index[0]
+                    ratios.loc[m, p] = r
+                    solutions.remove((predicate, args))
+            for predicate, args in solutions.copy():
+                if predicate in ['maximalDistance', 'minimalDistance']:
+                    c, d = args.split(',')
+                    distances.loc[c, predicate[:3]] = d
+                    solutions.remove((predicate, args))
+            for df in [comps, settings, ratios, distances]:
+                for i in range(2):
+                    df.sort_index(axis=i, inplace=True)
+            solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios, distances]))]
+        
+        return '\n'.join(solutions)
+
 
     def addModel(self, model):
         self.lenModels += 1
         print(f'# {self.lenModels}')
-        print(model)
+        print(self.traverseModel(model))
         print()
-        self.models.append((str(model), model.symbols(atoms=True)))
+        self.models.append((model, model.symbols(atoms=True)))
 
 
 
