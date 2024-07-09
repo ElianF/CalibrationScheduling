@@ -41,5 +41,5 @@ minimalDistance(C, D) :- isComp(C),
                          D = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
 maximalDistance(C, D) :- isComp(C),
                          D = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
-#maximize{Dmin*(Nreal-1)@2, C : minimalDistance(C, Dmin), countMessComp(C, Nreal)}.
-#maximize{Dmax@2, C : maximalDistance(C, Dmax)}.
+#maximize{(Dmin*(Nreal-1)-Lo)*100/(Hi-Lo)@2, C : minimalDistance(C, Dmin), countMessComp(C, Nreal), defComp(C, Lo, Hi, N, Z)}.
+#maximize{(Dmax-Lo)*100/(Hi-Lo)@2, C : maximalDistance(C, Dmax), defComp(C, Lo, Hi, N, Z)}.
