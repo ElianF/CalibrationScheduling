@@ -37,11 +37,17 @@ isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, 
 
 % soft constraints
 % optimize arrangement of measurements
-#minimize{100*X@1, M : validMess(M, P, S, C), X = 3}.
-% optimize settings to minimize variance
-minimalDistance(C, D) :- isComp(C),
-                         D = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
-maximalDistance(C, D) :- isComp(C),
-                         D = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
-#maximize{(Dmin*(Nreal-1)-Lo)*100/(Hi-Lo)@2, C : minimalDistance(C, Dmin), countMessComp(C, Nreal), defComp(C, Lo, Hi, N, Z)}.
-#maximize{(Dmax-Lo)*100/(Hi-Lo)@2, C : maximalDistance(C, Dmax), defComp(C, Lo, Hi, N, Z)}.
+#minimize{ 1 * 100 * X @1, M : validMess(M, P, S, C), X = 3}.
+% maximize coverage of ratios in interval
+maximalDistance(C, Dmax) :- isComp(C), 
+                            Dmax = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
+#maximize{ 2 * 100 * Dmax / (Hi-Lo) @2, C : 
+               maximalDistance(C, Dmax), 
+               defComp(C, Lo, Hi, N, Z)}.
+% minimize variance through maximizing minimal distance between ratios
+minimalDistance(C, Dmin) :- isComp(C),
+                            Dmin = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
+#maximize{ 1 * 100 * Dmin*(Nreal-1) / (Hi-Lo) @2, C : 
+               minimalDistance(C, Dmin), 
+               defComp(C, Lo, Hi, N, Z),
+               countMessComp(C, Nreal)}.
