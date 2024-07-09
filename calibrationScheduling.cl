@@ -9,7 +9,8 @@ isComp(C) :- defComp(C, Lo, Hi, N, Z).
 % hard constraints
 %% general
 % every component is measured often enough
-:- #count{_M : validMess(_M, _P, _S, C)} < N, defComp(C, Lo, Hi, N, Z).
+countMessComp(C, Nreal) :- Nreal = #count{_M : validMess(_M, _P, _S, C)}, isComp(C).
+:- countMessComp(C, Nreal), Nreal < N, defComp(C, Lo, Hi, N, Z).
 
 %% per measurement
 % at least two compounts are measured
@@ -34,12 +35,11 @@ isRatio(M, C, R) :- validMess(M, P, S, C), defComp(C, Lo, Hi, N, Z), Sges = #sum
 
 % soft constraints
 % optimize arrangement of measurements
-#minimize{1@2, M : validMess(M, P, S, C)}.
-#maximize{1@1, M, P : validMess(M, P, S, C)}.
+#minimize{100*X@1, M : validMess(M, P, S, C), X = 3}.
 % optimize settings to minimize variance
 minimalDistance(C, D) :- isComp(C),
                          D = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
 maximalDistance(C, D) :- isComp(C),
                          D = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
-#maximize{Dmin@4, C : minimalDistance(C, Dmin)}.
-#maximize{Dmax@3, C : maximalDistance(C, Dmax)}.
+#maximize{Dmin*(Nreal-1)@2, C : minimalDistance(C, Dmin), countMessComp(C, Nreal)}.
+#maximize{Dmax@2, C : maximalDistance(C, Dmax)}.
