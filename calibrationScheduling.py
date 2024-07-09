@@ -11,9 +11,8 @@ class Context:
 
 
 class Solution:
-    def __init__(self, classicDisplay, displayedPredicates):
+    def __init__(self, classicDisplay):
         self.classicDisplay = classicDisplay
-        self.displayedPredicates = displayedPredicates
         self.models = list()
         self.lenModels = 0
  
@@ -25,10 +24,6 @@ class Solution:
             pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
             solutions = re.findall(pattern, model)
 
-            for predicate, args in solutions.copy():
-                if self.displayedPredicates != None and predicate not in self.displayedPredicates:
-                    solutions.remove((predicate, args))
-            
             if self.classicDisplay:
                 solutions.sort()
                 solutions = [f'{predicate}({args})' for predicate, args in solutions]
@@ -38,6 +33,7 @@ class Solution:
                 comps = pd.DataFrame(index=list(), columns=list())
                 settings = pd.DataFrame(index=list(), columns=list())
                 ratios = pd.DataFrame(index=list(), columns=list())
+                distances = pd.DataFrame(index=list(), columns=['min', 'max'])
                 for predicate, args in solutions.copy():
                     if predicate == 'validMess':
                         m, p, s, c = args.split(',')
@@ -51,16 +47,23 @@ class Solution:
                         p = comps.loc[m, mask].index[0]
                         ratios.loc[m, p] = r
                         solutions.remove((predicate, args))
-                for df in [comps, settings, ratios]:
+                for predicate, args in solutions.copy():
+                    if predicate in ['maximalDistance', 'minimalDistance']:
+                        c, d = args.split(',')
+                        distances.loc[c, predicate[:3]] = d
+                        solutions.remove((predicate, args))
+                for df in [comps, settings, ratios, distances]:
                     for i in range(2):
                         df.sort_index(axis=i, inplace=True)
-                solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios]))]
+                solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios, distances]))]
             
             yield '\n'.join(solutions)
 
     def addModel(self, model):
         self.lenModels += 1
-        print(self.lenModels, end='\r')
+        print(f'# {self.lenModels}')
+        print(model)
+        print()
         self.models.append((str(model), model.symbols(atoms=True)))
 
 
@@ -133,7 +136,7 @@ def main():
     ctl.ground([("base", [])], context=Context())
     ctl.configuration.solve.models = "0"
 
-    solution = Solution(config['classicDisplay'], config['displayedPredicates'])
+    solution = Solution(config['classicDisplay'])
     if (n:=config['count']) <= 0:
         # solve it and total number of models and time necessary
         t0 = time.time()
@@ -149,11 +152,6 @@ def main():
             for _, model in zip(range(n), handle):
                 solution.addModel(model)
             t1 = time.time() - t0
-        
-        for n, model in zip(range(n), solution):
-            print(f'# {n}')
-            print(model)
-            print()
     
     print(t1)
 

@@ -41,4 +41,5 @@ minimalDistance(C, D) :- isComp(C),
                          D = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
 maximalDistance(C, D) :- isComp(C),
                          D = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
-#minimize{|Dmax-Dmin|@3, C : minimalDistance(C, Dmin), maximalDistance(C, Dmax)}.
+#maximize{Dmin@4, C : minimalDistance(C, Dmin)}.
+#maximize{Dmax@3, C : maximalDistance(C, Dmax)}.

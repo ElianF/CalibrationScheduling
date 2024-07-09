@@ -1,17 +1,4 @@
 {
-    "displayedPredicates": [
-        "_isMess", 
-        "_isPump", 
-        "_isSetting", 
-        "_isComp",
-        "_validPump",
-        "_defComp",
-        "validMess",
-        "_id1Mess",
-        "_id2Mess",
-        "isRatio",
-        "var"
-    ],
     "templates": {
         "pumps": "validPump({p}, {s}).",
         "components": "defComp({c}, {lo}, {hi}, {n}, {z})."
