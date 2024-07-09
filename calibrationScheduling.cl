@@ -34,13 +34,11 @@ isRatio(M, C, R) :- validMess(M, P, S, C), defComp(C, Lo, Hi, N, Z), Sges = #sum
 
 % soft constraints
 % optimize arrangement of measurements
-#minimize{1@2, M: validMess(M, P, S, C)}.
-#maximize{1@1, M, P: validMess(M, P, S, C)}.
+#minimize{1@2, M : validMess(M, P, S, C)}.
+#maximize{1@1, M, P : validMess(M, P, S, C)}.
 % optimize settings to minimize variance
-var(C, V) :- isComp(C),
-             Sges = #sum{_S: validMess(M, _P, _S, _C)},
-             X = #sum{_R : isRatio(_M, C, _R)},
-             My = X / Sges,
-             Y = #sum{(_R-My)^2 : isRatio(_M, C, _R)},
-             V = Y / Sges.
-% #minimize{V@2, C : var(C, V)}.
+minimalDistance(C, D) :- isComp(C),
+                         D = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
+maximalDistance(C, D) :- isComp(C),
+                         D = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
+#minimize{|Dmax-Dmin|@3, C : minimalDistance(C, Dmin), maximalDistance(C, Dmax)}.

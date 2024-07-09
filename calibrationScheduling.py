@@ -1,6 +1,5 @@
 import argparse
 import clingo
-from threading import Thread
 import time
 import re
 import json
@@ -36,13 +35,26 @@ class Solution:
                 if len(solutions) == 0:
                     solutions = ['.']
             else:
-                mess = pd.DataFrame(index=list(), columns=list())
-                for predicate, args in solutions:
+                comps = pd.DataFrame(index=list(), columns=list())
+                settings = pd.DataFrame(index=list(), columns=list())
+                ratios = pd.DataFrame(index=list(), columns=list())
+                for predicate, args in solutions.copy():
                     if predicate == 'validMess':
                         m, p, s, c = args.split(',')
-                        mess.loc[m, p] = f'{c}+{s}'
-                mess = mess.sort_index()
-                solutions = [str(mess.transpose())]
+                        comps.loc[m, p] = c
+                        settings.loc[m, p] = s
+                        solutions.remove((predicate, args))
+                for predicate, args in solutions.copy():
+                    if predicate == 'isRatio':
+                        m, c, r = args.split(',')
+                        mask = comps.loc[m] == c
+                        p = comps.loc[m, mask].index[0]
+                        ratios.loc[m, p] = r
+                        solutions.remove((predicate, args))
+                for df in [comps, settings, ratios]:
+                    for i in range(2):
+                        df.sort_index(axis=i, inplace=True)
+                solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios]))]
             
             yield '\n'.join(solutions)
 
@@ -147,7 +159,8 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except:
-        pass
+    main()
+    # try:
+    #     main()
+    # except:
+    #     pass
