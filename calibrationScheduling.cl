@@ -36,5 +36,13 @@ isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, 
 
 % soft constraints
 % optimize arrangement of measurements
-#minimize { 1@2, M: validMess(M, P, S, C)}.
-#maximize { 1@1, M, P: validMess(M, P, S, C)}.
+#minimize{1@2, M: validMess(M, P, S, C)}.
+#maximize{1@1, M, P: validMess(M, P, S, C)}.
+% optimize settings to minimize variance
+var(C, V) :- isComp(C),
+             Sges = #sum{_S: validMess(M, _P, _S, _C)},
+             X = #sum{_R : isRatio(_M, C, _R)},
+             My = X / Sges,
+             Y = #sum{(_R-My)^2 : isRatio(_M, C, _R)},
+             V = Y / Sges.
+% #minimize{V@2, C : var(C, V)}.

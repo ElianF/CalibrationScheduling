@@ -10,7 +10,7 @@
         "_id1Mess",
         "_id2Mess",
         "isRatio",
-        "z"
+        "var"
     ],
     "templates": {
         "pumps": "validPump({p}, {s}).",
