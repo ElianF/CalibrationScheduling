@@ -64,7 +64,7 @@ class Solution:
             for df in [comps, settings, ratios, coverage]:
                 for i in range(2):
                     df.sort_index(axis=i, inplace=True)
-            solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios, coverage]))]
+            solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
         
         return '\n'.join(solutions)
 
@@ -90,6 +90,7 @@ def processCommandLineArguments():
     # add all arguments
     parser.add_argument('-p', '--pumps', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
     parser.add_argument('-c', '--components', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
+    parser.add_argument('-a', '--accuracy', type=lambda s: validate('\d+', s, int))
     
     args = parser.parse_args()
 
@@ -104,6 +105,8 @@ def processCommandLineArguments():
             parser.error(f'range of pump {name} must be of the form (name, start, end, step)')
         elif step <= 0:
             parser.error(f'step of pump {name} must be a positive number')
+    if args.accuracy == 0:
+        parser.error('accuracy must be strictly greater than 0')
     
     return args
 
@@ -119,17 +122,16 @@ def generateFacts(args, templates:dict):
                 for y in range(x[1], x[2]+1, x[3]):
                     yield template.format(x=[x[0], y])
             elif type == 'components':
-                yield template.format(x=[*x, 2**n])
+                yield template.format(x=[x[0], x[3], 2**n, x[1], x[2]])
 
 
 def main():
     with open('config.json', 'r') as file:
         config = json.load(file)
-    
-    ctl = clingo.Control()
 
     # insert facts from command line arguments
     args = processCommandLineArguments()
+    ctl = clingo.Control(['-c', f'acc={args.accuracy}'])
     facts = list(generateFacts(args, config['templates']))
     ctl.add('base', [], ' '.join(facts))
     # insert clingo code into ctl

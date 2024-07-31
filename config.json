@@ -1,8 +1,8 @@
 {
     "templates": {
         "pumps": "validPump({p}, {s}).",
-        "components": "defComp({c}, {lo}, {hi}, {n}, {z})."
+        "components": "defComp({c}, Lo, Hi, {n}, {z}) :- Lo = {lo} / acc * acc, Hi = {hi} / acc * acc."
     },
-    "count": 20,
+    "count": 50,
     "classicDisplay": false
 }
