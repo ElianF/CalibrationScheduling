@@ -37,7 +37,7 @@ class Solution:
             comps = pd.DataFrame(index=list(), columns=list())
             settings = pd.DataFrame(index=list(), columns=list())
             ratios = pd.DataFrame(index=list(), columns=list())
-            distances = pd.DataFrame(index=list(), columns=['min', 'max'])
+            coverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
             for predicate, args in solutions.copy():
                 if predicate == 'validMess':
                     m, p, s, c = args.split(',')
@@ -52,14 +52,19 @@ class Solution:
                     ratios.loc[m, p] = r
                     solutions.remove((predicate, args))
             for predicate, args in solutions.copy():
-                if predicate in ['maximalDistance', 'minimalDistance']:
+                if predicate in ['actualCoverage', 'effectiveCoverage']:
                     c, d = args.split(',')
-                    distances.loc[c, predicate[:3]] = d
+                    abbrev = 'aCov' if predicate == 'actualCoverage' else 'eCov'
+                    coverage.loc[c, abbrev] = d
                     solutions.remove((predicate, args))
-            for df in [comps, settings, ratios, distances]:
+                elif predicate == 'defComp':
+                    c, lo, hi, n, z = args.split(',')
+                    coverage.loc[c, 'max'] = str(int(hi)-int(lo))
+                    solutions.remove((predicate, args))
+            for df in [comps, settings, ratios, coverage]:
                 for i in range(2):
                     df.sort_index(axis=i, inplace=True)
-            solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios, distances]))]
+            solutions = ['\n'.join(map(lambda x: str(x.transpose()), [comps, settings, ratios, coverage]))]
         
         return '\n'.join(solutions)
 
