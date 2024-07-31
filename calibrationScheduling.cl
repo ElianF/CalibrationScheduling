@@ -26,7 +26,7 @@ id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P <  P', S = S', C >  C'.
 
 % ratios are within interval
-isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, _C)}, R = S * 100 / Sges, 0 <= R, R <= 100.
+isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, _C), _S != S}, R = S * 100 / (S + Sges), 0 <= R, R <= 100.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, N, Z), R < Lo.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, N, Z), Hi < R.
 
@@ -39,15 +39,17 @@ isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, 
 % optimize arrangement of measurements
 #minimize{ 1 * 100 * X @1, M : validMess(M, P, S, C), X = 3}.
 % maximize coverage of ratios in interval
-maximalDistance(C, Dmax) :- isComp(C), 
-                            Dmax = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
-#maximize{ 2 * 100 * Dmax / (Hi-Lo) @2, C : 
-               maximalDistance(C, Dmax), 
+actualCoverage(C, aCov) :- isComp(C), 
+                           aCov = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
+:- actualCoverage(C, 0).
+#minimize{ 1 * 100 * (Hi-Lo) / Dmax @2, C : 
+               actualCoverage(C, Dmax), 
                defComp(C, Lo, Hi, N, Z)}.
 % minimize variance through maximizing minimal distance between ratios
-minimalDistance(C, Dmin) :- isComp(C),
-                            Dmin = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
-#maximize{ 1 * 100 * Dmin*(Nreal-1) / (Hi-Lo) @2, C : 
-               minimalDistance(C, Dmin), 
+effectiveCoverage(C, eCov) :- isComp(C),
+                              eCov = #min{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
+:- effectiveCoverage(C, 0).
+#minimize{ 1 * 100 * (Hi-Lo) / (eCov*(Nreal-1)) @2, C : 
+               effectiveCoverage(C, eCov), 
                defComp(C, Lo, Hi, N, Z),
                countMessComp(C, Nreal)}.
