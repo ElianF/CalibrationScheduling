@@ -125,7 +125,7 @@ def generateFacts(args, templates:dict):
                 yield template.format(x=[x[0], x[3], 2**n, x[1], x[2]])
 
 
-def main():
+def main(dry:bool=False):
     with open('config.json', 'r') as file:
         config = json.load(file)
 
@@ -143,6 +143,9 @@ def main():
         file.write('\n\n% programm\n')
         with open('calibrationScheduling.cl', 'r') as cl:
             file.write(cl.read())
+
+    if dry:
+        return
 
     # ground it with some helper methods in Context
     ctl.ground([("base", [])], context=Context())
@@ -169,7 +172,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(True)
     # try:
     #     main()
     # except:
