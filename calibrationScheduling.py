@@ -15,6 +15,10 @@ class Solution:
         self.classicDisplay = classicDisplay
         self.models = list()
         self.lenModels = 0
+
+        if self.classicDisplay:
+            with open('solved.txt', 'w') as file:
+                file.write('')
  
     def __str__(self):
         return '\n'.join([f'# {n}\n{model}\n' for n, model in enumerate(self)])
@@ -28,53 +32,57 @@ class Solution:
         pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
         solutions = re.findall(pattern, str(model))
 
-        if self.classicDisplay:
-            solutions.sort()
-            solutions = [f'{predicate}({args})' for predicate, args in solutions]
-            if len(solutions) == 0:
-                solutions = ['.']
-        else:
-            comps = pd.DataFrame(index=list(), columns=list())
-            settings = pd.DataFrame(index=list(), columns=list())
-            ratios = pd.DataFrame(index=list(), columns=list())
-            coverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
-            for predicate, args in solutions.copy():
-                if predicate == 'validMess':
-                    m, p, s, c = args.split(',')
-                    comps.loc[m, p] = c
-                    settings.loc[m, p] = s
-                    solutions.remove((predicate, args))
-            for predicate, args in solutions.copy():
-                if predicate == 'isRatio':
-                    m, c, r = args.split(',')
-                    mask = comps.loc[m] == c
-                    p = comps.loc[m, mask].index[0]
-                    ratios.loc[m, p] = r
-                    solutions.remove((predicate, args))
-            for predicate, args in solutions.copy():
-                if predicate in ['actualCoverage', 'effectiveCoverage']:
-                    c, d = args.split(',')
-                    abbrev = 'aCov' if predicate == 'actualCoverage' else 'eCov'
-                    coverage.loc[c, abbrev] = d
-                    solutions.remove((predicate, args))
-                elif predicate == 'defComp':
-                    c, lo, hi, n, z = args.split(',')
-                    coverage.loc[c, 'max'] = str(int(hi)-int(lo))
-                    solutions.remove((predicate, args))
-            for df in [comps, settings, ratios, coverage]:
-                for i in range(2):
-                    df.sort_index(axis=i, inplace=True)
-            solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
+        comps = pd.DataFrame(index=list(), columns=list())
+        settings = pd.DataFrame(index=list(), columns=list())
+        ratios = pd.DataFrame(index=list(), columns=list())
+        coverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
+        for predicate, args in solutions.copy():
+            if predicate == 'validMess':
+                m, p, s, c = args.split(',')
+                comps.loc[m, p] = c
+                settings.loc[m, p] = s
+                solutions.remove((predicate, args))
+        for predicate, args in solutions.copy():
+            if predicate == 'isRatio':
+                m, c, r = args.split(',')
+                mask = comps.loc[m] == c
+                p = comps.loc[m, mask].index[0]
+                ratios.loc[m, p] = r
+                solutions.remove((predicate, args))
+        for predicate, args in solutions.copy():
+            if predicate in ['actualCoverage', 'effectiveCoverage']:
+                c, d = args.split(',')
+                abbrev = 'aCov' if predicate == 'actualCoverage' else 'eCov'
+                coverage.loc[c, abbrev] = d
+                solutions.remove((predicate, args))
+            elif predicate == 'defComp':
+                c, lo, hi, n, z = args.split(',')
+                coverage.loc[c, 'max'] = str(int(hi)-int(lo))
+                solutions.remove((predicate, args))
+        for df in [comps, settings, ratios, coverage]:
+            for i in range(2):
+                df.sort_index(axis=i, inplace=True)
+        solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
         
         return '\n'.join(solutions)
 
 
-    def addModel(self, model):
+    def addModel(self, model, fillList:bool=True):
         self.lenModels += 1
-        print(f'# {self.lenModels}')
-        print(self.traverseModel(model))
-        print()
-        self.models.append((model, model.symbols(atoms=True)))
+
+        if self.classicDisplay:
+            answer = f'Answer: {self.lenModels}\n{str(model)}\nOptimization: {str(model.cost[0])}\n'
+            with open('solved.txt', 'a') as file:
+                file.write(answer)
+            print(answer, end='')
+
+        else:
+            print(f'# {self.lenModels}')
+            print(self.traverseModel(model))
+            print()
+        
+        if fillList:
+            self.models.append((model, model.symbols(atoms=True)))
 
 
 
@@ -137,7 +145,7 @@ def main(dry:bool=False):
     # insert clingo code into ctl
     ctl.load('calibrationScheduling.cl')
     # output program for manual analysis
-    with open('out.cl', 'w') as file:
+    with open('init.cl', 'w') as file:
         file.write('% initialisation\n')
         file.write('\n'.join(facts))
         file.write('\n\n% programm\n')
@@ -148,9 +156,11 @@ def main(dry:bool=False):
         return
 
     # ground it with some helper methods in Context
+    print('Grounding')
     ctl.ground([("base", [])], context=Context())
     ctl.configuration.solve.models = "0"
 
+    print('Solving')
     solution = Solution(config['classicDisplay'])
     if (n:=config['count']) <= 0:
         # solve it and total number of models and time necessary
@@ -172,7 +182,7 @@ def main(dry:bool=False):
 
 
 if __name__ == '__main__':
-    main(True)
+    main(False)
     # try:
     #     main()
     # except:

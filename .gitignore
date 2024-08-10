@@ -1,6 +1,7 @@
 .vscode/*
 out.cl
-log.txt
-out.asp
-out.lp
-out.txt
+ground.asp
+init.cl
+ground.txt
+solved.txt
+__pycache__/*
