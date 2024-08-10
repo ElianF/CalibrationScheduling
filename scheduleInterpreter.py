@@ -11,6 +11,8 @@ def main():
     pattern = 'Answer: \\d+\\n([\\w|\\W]*?)Optimization: \\d+\\n'
     for model in re.findall(pattern, content):
         solution.addModel(model, False)
+    
+    input('')
         
 
 
