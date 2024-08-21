@@ -26,7 +26,7 @@ id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P <  P', S = S', C >  C'.
 
 % ratios are within interval
-isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, _C), _S != S}, R = S * 100 / (S + Sges) / acc * acc, 0 <= R, R <= 100.
+isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, _C), _S != S}, R = (2 * ((S * 100) / (S + Sges)) + acc) / (2*acc) * acc.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, D, N, Z), R < Lo.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, D, N, Z), Hi < R.
 
@@ -48,8 +48,8 @@ effectiveCoverage(C, ECov) :- isComp(C),
                               countMessComp(C, Nreal),
                               ECov = Dmin * (Nreal-1).
 :- effectiveCoverage(C, 0).
-#minimize{ 1 * 100 * D / ACov +
-           2 * 100 * D / ECov, C : 
+#minimize{ (1 * 100 * D) / ACov +
+           (2 * 100 * D) / ECov, C : 
                actualCoverage(C, ACov),
                effectiveCoverage(C, ECov), 
                defComp(C, Lo, Hi, D, N, Z)}.
