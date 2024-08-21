@@ -3,6 +3,7 @@ import clingo
 import time
 import re
 import json
+import numpy as np
 import pandas as pd
 
 
@@ -11,8 +12,9 @@ class Context:
 
 
 class Solution:
-    def __init__(self, classicDisplay):
+    def __init__(self, classicDisplay=False, weights={'aCov':1,'eCov':1}):
         self.classicDisplay = classicDisplay
+        self.weights = weights
         self.models = list()
         self.lenModels = 0
 
@@ -28,46 +30,74 @@ class Solution:
             yield self.traverseModel(str(model))
 
 
-    def traverseModel(self, model) -> str:
+    def traverseModel(self, model) -> tuple[str, int]:
         pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
         solutions = re.findall(pattern, str(model))
 
         comps = pd.DataFrame(index=list(), columns=list())
         settings = pd.DataFrame(index=list(), columns=list())
+        realRatios = pd.DataFrame(index=list(), columns=list())
         ratios = pd.DataFrame(index=list(), columns=list())
+        realCoverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
         coverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
+        messCount = dict()
         for predicate, args in solutions.copy():
             if predicate == 'validMess':
                 m, p, s, c = args.split(',')
                 comps.loc[m, p] = c
                 settings.loc[m, p] = s
                 solutions.remove((predicate, args))
+        intSettings = settings.copy().fillna(0).astype(int)
         for predicate, args in solutions.copy():
             if predicate == 'isRatio':
                 m, c, r = args.split(',')
                 mask = comps.loc[m] == c
                 p = comps.loc[m, mask].index[0]
-                ratios.loc[m, p] = r
+                real_r = int(100 * intSettings.loc[m, p] / sum(intSettings.loc[m]))
+                realRatios.loc[m, p] = real_r
+                ratios.loc[m, p] = f'{r}[{real_r}]'
                 solutions.remove((predicate, args))
         for predicate, args in solutions.copy():
-            if predicate in ['actualCoverage', 'effectiveCoverage']:
+            if predicate == 'countMessComp':
+                c, n = args.split(',')
+                messCount[c] = int(n)
+        for predicate, args in solutions.copy():
+            if predicate == 'actualCoverage':
                 c, d = args.split(',')
-                abbrev = 'aCov' if predicate == 'actualCoverage' else 'eCov'
-                coverage.loc[c, abbrev] = d
+                maskedRatios = realRatios[comps == c]
+                real_d = int(maskedRatios.max(axis=None) - maskedRatios.min(axis=None))
+                realCoverage.loc[c, 'aCov'] = real_d
+                coverage.loc[c, 'aCov'] = f'{d}{[real_d]}'
+                solutions.remove((predicate, args))
+            elif predicate == 'effectiveCoverage':
+                c, d = args.split(',')
+                values = realRatios[comps == c].to_numpy().flatten()
+                sortedValues = np.sort(values[~np.isnan(values)]).astype(int).flatten()
+                real_d = (sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1)
+                realCoverage.loc[c, 'eCov'] = real_d
+                coverage.loc[c, 'eCov'] = f'{d}{[real_d]}'
                 solutions.remove((predicate, args))
             elif predicate == 'defComp':
                 c, lo, hi, d, n, z = args.split(',')
+                realCoverage.loc[c, 'max'] = int(d)
                 coverage.loc[c, 'max'] = d
                 solutions.remove((predicate, args))
         for df in [comps, settings, ratios, coverage]:
             for i in range(2):
                 df.sort_index(axis=i, inplace=True)
         solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
+
+        realScore = 0
+        for abbrev in ['aCov', 'eCov']:
+            for c in realCoverage.index:
+                d = realCoverage.loc[c, 'max']
+                cov = realCoverage.loc[c, abbrev]
+                realScore += int(self.weights[abbrev] * 100 * d // cov)
         
-        return '\n'.join(solutions)
+        return '\n'.join(solutions), realScore
 
 
-    def addModel(self, model):
+    def addModel(self, model, score=-1):
         self.lenModels += 1
 
         if self.classicDisplay:
@@ -78,10 +108,15 @@ class Solution:
 
         else:
             print(f'# {self.lenModels}')
-            print(self.traverseModel(model))
-            if type(model) != str: print(f'Optimization: {model.cost[0]}\n')
-        
-        if type(model) != str: self.models.append((model, model.symbols(atoms=True)))
+            modelStats, realScore = self.traverseModel(model)
+            print(modelStats)
+            if type(model) != str: 
+                score = model.cost[0]
+            print(f'Optimization: {score}[{realScore}]')
+            print('')
+
+        if type(model) != str: 
+            self.models.append((model, model.symbols(atoms=True)))
 
 
 
@@ -161,7 +196,7 @@ def main(dry:bool=False):
     ctl.configuration.solve.models = "0"
 
     print('Solving')
-    solution = Solution(config['classicDisplay'])
+    solution = Solution(config['classicDisplay'], config['weights'])
     if (n:=config['count']) <= 0:
         # solve it and total number of models and time necessary
         t0 = time.time()

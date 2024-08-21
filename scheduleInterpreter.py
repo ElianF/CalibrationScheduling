@@ -7,11 +7,10 @@ def main():
     with open('solved.txt', 'r') as file:
         content = file.read()
     
-    solution = Solution(False)
+    solution = Solution()
     pattern = 'Answer: \\d+\\n([\\w|\\W]*?)Optimization: (\\d+)\\n'
     for model, score in re.findall(pattern, content):
-        solution.addModel(model)
-        print(f'Optimization: {score}\n')
+        solution.addModel(model, score)
     
     input('')
         

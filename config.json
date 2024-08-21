@@ -4,5 +4,9 @@
         "components": "defComp({c}, Lo, Hi, D, {n}, {z}) :- Lo = {lo} + acc - ({lo}-1) \\ acc - 1 , Hi = {hi} / acc * acc, D = {hi} - {lo}."
     },
     "count": 50,
-    "classicDisplay": false
+    "classicDisplay": false,
+    "weights": {
+        "aCov": 1,
+        "eCov": 2
+    }
 }
