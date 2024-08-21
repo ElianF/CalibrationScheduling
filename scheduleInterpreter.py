@@ -8,9 +8,10 @@ def main():
         content = file.read()
     
     solution = Solution(False)
-    pattern = 'Answer: \\d+\\n([\\w|\\W]*?)Optimization: \\d+\\n'
-    for model in re.findall(pattern, content):
-        solution.addModel(model, False)
+    pattern = 'Answer: \\d+\\n([\\w|\\W]*?)Optimization: (\\d+)\\n'
+    for model, score in re.findall(pattern, content):
+        solution.addModel(model)
+        print(f'Optimization: {score}\n')
     
     input('')
         

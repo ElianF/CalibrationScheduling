@@ -56,8 +56,8 @@ class Solution:
                 coverage.loc[c, abbrev] = d
                 solutions.remove((predicate, args))
             elif predicate == 'defComp':
-                c, lo, hi, n, z = args.split(',')
-                coverage.loc[c, 'max'] = str(int(hi)-int(lo))
+                c, lo, hi, d, n, z = args.split(',')
+                coverage.loc[c, 'max'] = d
                 solutions.remove((predicate, args))
         for df in [comps, settings, ratios, coverage]:
             for i in range(2):
@@ -67,7 +67,7 @@ class Solution:
         return '\n'.join(solutions)
 
 
-    def addModel(self, model, fillList:bool=True):
+    def addModel(self, model):
         self.lenModels += 1
 
         if self.classicDisplay:
@@ -79,10 +79,9 @@ class Solution:
         else:
             print(f'# {self.lenModels}')
             print(self.traverseModel(model))
-            print()
+            if type(model) != str: print(f'Optimization: {model.cost[0]}\n')
         
-        if fillList:
-            self.models.append((model, model.symbols(atoms=True)))
+        if type(model) != str: self.models.append((model, model.symbols(atoms=True)))
 
 
 
@@ -98,7 +97,7 @@ def processCommandLineArguments():
     # add all arguments
     parser.add_argument('-p', '--pumps', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
     parser.add_argument('-c', '--components', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
-    parser.add_argument('-a', '--accuracy', type=lambda s: validate('\d+', s, int))
+    parser.add_argument('-a', '--accuracy', default=1, type=lambda s: validate('\d+', s, int))
     
     args = parser.parse_args()
 
@@ -125,12 +124,13 @@ def generateFacts(args, templates:dict):
         while re.search('\{\w+?\}', template) != None:
             template = re.sub('\{\w+?\}', '{x['+str(i)+']}', template, count=1)
             i += 1
-        for n, x in enumerate(args.__dict__[type]):
+        for k, x in enumerate(args.__dict__[type]):
             if type == 'pumps':
                 for y in range(x[1], x[2]+1, x[3]):
                     yield template.format(x=[x[0], y])
             elif type == 'components':
-                yield template.format(x=[x[0], x[3], 2**n, x[1], x[2]])
+                c, lo, hi, n = x
+                yield template.format(x=[c, n, 2**k, lo, lo, hi, hi, lo])
 
 
 def main(dry:bool=False):
