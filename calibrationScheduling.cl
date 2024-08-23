@@ -26,18 +26,16 @@ id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P <  P', S = S', C >  C'.
 
 % ratios are within interval
-isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, _C), _S != S}, R = (2 * ((S * 100) / (S + Sges)) + acc) / (2*acc) * acc.
+isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, _C)}, R = (2 * ((S * 100) / Sges) + acc) / (2*acc) * acc.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, D, N, Z), R < Lo.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, D, N, Z), Hi < R.
 
 % uniqueness
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P',          C != C'. % every pump gets unique component 
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P != P',          C  = C'. % every compount gets unique pump 
-:- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P', S != S'         . % every pump gets unique setting
+% :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P', S != S'         . % every pump gets unique setting
 
 % soft constraints
-% optimize arrangement of measurements
-% #minimize{ 1 * 100 * X @1, M : validMess(M, P, S, C), X = 3}. % TODO
 % maximize coverage of ratios in interval
 actualCoverage(C, ACov) :- isComp(C), 
                            ACov = #max{|_R-_R'| : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M'}.
