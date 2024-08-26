@@ -33,7 +33,7 @@ isRatio(M, C, R) :- validMess(M, P, S, C), Sges = #sum{_S: validMess(M, _P, _S, 
 % uniqueness
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P',          C != C'. % every pump gets unique component 
 :- validMess(M, P, S, C), validMess(M, P', S', C'), P != P',          C  = C'. % every compount gets unique pump 
-% :- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P', S != S'         . % every pump gets unique setting
+:- validMess(M, P, S, C), validMess(M, P', S', C'), P  = P', S != S'         . % every pump gets unique setting
 
 % soft constraints
 % maximize coverage of ratios in interval

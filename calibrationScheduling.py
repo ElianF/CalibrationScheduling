@@ -34,10 +34,10 @@ class Solution:
         pattern = '(\w+)\((\w+[, \w+]*)\)' # matches: "<predicate>(<attribute>, ...) "
         solutions = re.findall(pattern, str(model))
 
-        comps = pd.DataFrame(index=list(), columns=list())
-        settings = pd.DataFrame(index=list(), columns=list())
+        comps = pd.DataFrame(index=list(), columns=list(), dtype=str)
+        settings = pd.DataFrame(index=list(), columns=list(), dtype=str)
         realRatios = pd.DataFrame(index=list(), columns=list())
-        ratios = pd.DataFrame(index=list(), columns=list())
+        ratios = pd.DataFrame(index=list(), columns=list(), dtype=str)
         realCoverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
         coverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
         messCount = dict()
@@ -92,7 +92,7 @@ class Solution:
             for c in realCoverage.index:
                 d = realCoverage.loc[c, 'max']
                 cov = realCoverage.loc[c, abbrev]
-                realScore += int(self.weights[abbrev] * 100 * d // cov)
+                realScore += int(self.weights[abbrev] * 100 * d / cov)
         
         return '\n'.join(solutions), realScore
 
