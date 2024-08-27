@@ -154,18 +154,26 @@ def processCommandLineArguments():
 
 
 def generateFacts(args, templates:dict):
+    specificTemplates = dict()
     for type, template in templates.items():
         i = 0
         while re.search('\{\w+?\}', template) != None:
             template = re.sub('\{\w+?\}', '{x['+str(i)+']}', template, count=1)
             i += 1
-        for k, x in enumerate(args.__dict__[type]):
-            if type == 'pumps':
-                for y in range(x[1], x[2]+1, x[3]):
-                    yield template.format(x=[x[0], y])
-            elif type == 'components':
-                c, lo, hi, n = x
-                yield template.format(x=[c, n, 2**k, lo, lo, hi, hi, lo])
+        specificTemplates[type] = template
+    
+    for k, x in enumerate(args.__dict__['pumps']):
+        p, start, end, step = x
+        for s in range(start, end+1, step):
+            yield specificTemplates['pumps'].format(x=[p, s])
+        
+    for k, x in enumerate(args.__dict__['components']):
+        c, lo, hi, n = x
+        yield specificTemplates['components'].format(x=[c, n, 2**k, lo, hi, hi, lo])
+    
+    c, lo, hi, n = ('x', 0, 100, 0)
+    k += 1
+    yield specificTemplates['components'].format(x=[c, n, 2**k, lo, hi, hi, lo])
 
 
 def main(dry:bool=False):
@@ -217,7 +225,7 @@ def main(dry:bool=False):
 
 
 if __name__ == '__main__':
-    main(True)
+    main(False)
     # try:
     #     main()
     # except:
