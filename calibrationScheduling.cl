@@ -16,15 +16,15 @@ isComp(C) :- defComp(C, Lo, Hi, D, N, Z).
 :- X = #count{_C : validMess(M, _P, _S, _C)}, 0 < X, X < 2, isMess(M).
 
 % remove redundant measurement due to symmetry
-% id1Mess(M, X) :- X = #sum{_Z : validMess(M, _P, _S, _C), defComp(_C, _Lo, _Hi, _D, _N, _Z)}, isMess(M).
-% id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
-% :- U < V, id1Mess(M, U), id1Mess(M+1, V).
+id1Mess(M, X) :- X = #sum{_Z : validMess(M, _P, _S, _C), defComp(_C, _Lo, _Hi, _D, _N, _Z)}, isMess(M).
+% id2Mess(M, X) :- X = #sum{_S, _C : validMess(M, _P, _S, _C)}, isMess(M).
+:- U < V, id1Mess(M, U), id1Mess(M+1, V).
 % :- U == V, K < L, id1Mess(M, U), id1Mess(M+1, V), id2Mess(M, K), id2Mess(M+1, L).
 :- validMess(M, P, S, C), validMess(M, P', S, C'), P < P', C > C'.
 
 % ratios are within interval
 isRatio(M, C, R) :- validMess(M, P, S, C),
-                    Sges = #sum{_S: validMess(M, _P, _S, _C)}, 
+                    Sges = #sum{_S, _C: validMess(M, _P, _S, _C)}, 
                     Sges <= maxSges,
                     R = (2 * ((S * 100) / Sges) + acc) / (2*acc) * acc.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, D, N, Z), R < Lo.
