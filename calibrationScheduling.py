@@ -38,15 +38,15 @@ class Solution:
         settings = pd.DataFrame(index=list(), columns=list(), dtype=str)
         realRatios = pd.DataFrame(index=list(), columns=list())
         ratios = pd.DataFrame(index=list(), columns=list(), dtype=str)
-        realCoverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
-        coverage = pd.DataFrame(index=list(), columns=['aCov', 'eCov', 'max'])
+        realCoverage = pd.DataFrame(index=list(), columns=['eCov', 'max'])
+        coverage = pd.DataFrame(index=list(), columns=['eCov', 'max'])
         messCount = dict()
         for predicate, args in solutions.copy():
             if predicate == 'validMess':
                 m, p, s, c = args.split(',')
                 comps.loc[m, p] = c
                 settings.loc[m, p] = s
-                solutions.remove((predicate, args))
+                # solutions.remove((predicate, args))
         intSettings = settings.copy().fillna(0).astype(int)
         for predicate, args in solutions.copy():
             if predicate == 'isRatio':
@@ -56,43 +56,39 @@ class Solution:
                 real_r = int(100 * intSettings.loc[m, p] / sum(intSettings.loc[m]))
                 realRatios.loc[m, p] = real_r
                 ratios.loc[m, p] = f'{r}[{real_r}]'
-                solutions.remove((predicate, args))
+                # solutions.remove((predicate, args))
         for predicate, args in solutions.copy():
             if predicate == 'countMessComp':
                 c, n = args.split(',')
                 messCount[c] = int(n)
         for predicate, args in solutions.copy():
-            if predicate == 'actualCoverage':
-                c, d = args.split(',')
-                maskedRatios = realRatios[comps == c]
-                real_d = int(maskedRatios.max(axis=None) - maskedRatios.min(axis=None))
-                realCoverage.loc[c, 'aCov'] = real_d
-                coverage.loc[c, 'aCov'] = f'{d}{[real_d]}'
-                solutions.remove((predicate, args))
-            elif predicate == 'effectiveCoverage':
+            if predicate == 'effectiveCoverage':
                 c, d = args.split(',')
                 values = realRatios[comps == c].to_numpy().flatten()
                 sortedValues = np.sort(values[~np.isnan(values)]).astype(int).flatten()
-                real_d = (sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1)
+                real_d = (sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1) + 1
                 realCoverage.loc[c, 'eCov'] = real_d
                 coverage.loc[c, 'eCov'] = f'{d}{[real_d]}'
-                solutions.remove((predicate, args))
+                # solutions.remove((predicate, args))
             elif predicate == 'defComp':
                 c, lo, hi, d, n, z = args.split(',')
+                if c == 'x':
+                    continue
                 realCoverage.loc[c, 'max'] = int(d)
                 coverage.loc[c, 'max'] = d
-                solutions.remove((predicate, args))
+                # solutions.remove((predicate, args))
         for df in [comps, settings, ratios, coverage]:
             for i in range(2):
                 df.sort_index(axis=i, inplace=True)
         solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
 
         realScore = 0
-        for abbrev in ['aCov', 'eCov']:
-            for c in realCoverage.index:
-                d = realCoverage.loc[c, 'max']
-                cov = realCoverage.loc[c, abbrev]
-                realScore += int(self.weights[abbrev] * 100 * d / cov)
+        for c in realCoverage.index:
+            if c == 'x':
+                continue
+            d = realCoverage.loc[c, 'max']
+            cov = realCoverage.loc[c, 'eCov']
+            realScore += int(self.weights['eCov'] * 100 * d / cov)
         
         return '\n'.join(solutions), realScore
 
