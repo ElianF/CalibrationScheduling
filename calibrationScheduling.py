@@ -208,8 +208,6 @@ def main(dry:bool=False):
         t0 = time.time()
         ctl.solve(on_model=solution.addModel)
         t1 = time.time() - t0
-      
-        print(solution.lenModels)
 
     else:
         # solve it partially and print every calculated without statistics

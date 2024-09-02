@@ -1,5 +1,5 @@
 % computation basis
-isMess(1..X) :- X' = #sum{_N, _C : defComp(_C, _Lo, _Hi, _D, _N, _Z)}, X = X' / 2.
+isMess(1..X) :- X = #sum{_N, _C : defComp(_C, _Lo, _Hi, _D, _N, _Z)}.
 isPump(P) :- validPump(P, S).
 isComp(C) :- defComp(C, Lo, Hi, D, N, Z).
 
@@ -9,7 +9,7 @@ isComp(C) :- defComp(C, Lo, Hi, D, N, Z).
 % hard constraints
 %% general
 % every component is measured often enough
-:- Nreal = #count{_M : validMess(_M, _P, _S, C)}, Nreal < N, defComp(C, Lo, Hi, D, N, Z).
+:- Nreal = #count{_M : validMess(_M, _P, _S, C)}, Nreal != N, defComp(C, Lo, Hi, D, N, Z), C != x.
 
 %% per measurement
 % at least two compounts are measured
@@ -20,11 +20,7 @@ isComp(C) :- defComp(C, Lo, Hi, D, N, Z).
 % id2Mess(M, X) :- X = #sum{_S : validMess(M, _P, _S, _C)}, isMess(M).
 % :- U < V, id1Mess(M, U), id1Mess(M+1, V).
 % :- U == V, K < L, id1Mess(M, U), id1Mess(M+1, V), id2Mess(M, K), id2Mess(M+1, L).
-% :- validMess(M, P, S, C), validMess(M, P', S', C'), P >  P', S = S', C <  C'.
-% :- validMess(M, P, S, C), validMess(M, P', S', C'), P >  P', S = S', C >  C'.
 :- validMess(M, P, S, C), validMess(M, P', S, C'), P < P', C > C'.
-% :- validMess(M, P, S, C), validMess(M, P', S, C ), P <  P', C >  C'.
-% :- validMess(M, P, S, C), validMess(M, P , S, C'), C <  C'.
 
 % ratios are within interval
 isRatio(M, C, R) :- validMess(M, P, S, C),
