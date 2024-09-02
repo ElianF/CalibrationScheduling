@@ -7,6 +7,6 @@
     "classicDisplay": false,
     "weights": {
         "aCov": 1,
-        "eCov": 2
+        "eCov": 1
     }
 }

@@ -44,6 +44,7 @@ class Solution:
         for predicate, args in solutions.copy():
             if predicate == 'validMess':
                 m, p, s, c = args.split(',')
+                messCount[c] = messCount.setdefault(c, 0) + 1
                 comps.loc[m, p] = c
                 settings.loc[m, p] = s
                 # solutions.remove((predicate, args))
@@ -58,15 +59,11 @@ class Solution:
                 ratios.loc[m, p] = f'{r}[{real_r}]'
                 # solutions.remove((predicate, args))
         for predicate, args in solutions.copy():
-            if predicate == 'countMessComp':
-                c, n = args.split(',')
-                messCount[c] = int(n)
-        for predicate, args in solutions.copy():
             if predicate == 'effectiveCoverage':
                 c, d = args.split(',')
                 values = realRatios[comps == c].to_numpy().flatten()
                 sortedValues = np.sort(values[~np.isnan(values)]).astype(int).flatten()
-                real_d = (sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1) + 1
+                real_d = (sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1)
                 realCoverage.loc[c, 'eCov'] = real_d
                 coverage.loc[c, 'eCov'] = f'{d}{[real_d]}'
                 # solutions.remove((predicate, args))
@@ -77,10 +74,6 @@ class Solution:
                 realCoverage.loc[c, 'max'] = int(d)
                 coverage.loc[c, 'max'] = d
                 # solutions.remove((predicate, args))
-        for df in [comps, settings, ratios, coverage]:
-            for i in range(2):
-                df.sort_index(axis=i, inplace=True)
-        solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
 
         realScore = 0
         for c in realCoverage.index:
@@ -88,7 +81,12 @@ class Solution:
                 continue
             d = realCoverage.loc[c, 'max']
             cov = realCoverage.loc[c, 'eCov']
-            realScore += int(self.weights['eCov'] * 100 * d / cov)
+            realScore += int(self.weights['eCov'] * 100 * d / (cov+1))
+        
+        for df in [comps, settings, ratios, coverage]:
+            for i in range(2):
+                df.sort_index(axis=i, inplace=True)
+        solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
         
         return '\n'.join(solutions), realScore
 
@@ -158,10 +156,14 @@ def generateFacts(args, templates:dict):
             i += 1
         specificTemplates[type] = template
     
+    maxSum = 0
     for k, x in enumerate(args.__dict__['pumps']):
         p, start, end, step = x
+        maxSum += end
         for s in range(start, end+1, step):
             yield specificTemplates['pumps'].format(x=[p, s])
+    
+    yield f'#const maxSges = {maxSum}.'
         
     for k, x in enumerate(args.__dict__['components']):
         c, lo, hi, n = x
