@@ -150,6 +150,8 @@ def processCommandLineArguments():
 def generateFacts(args, templates:dict):
     specificTemplates = dict()
     for type, template in templates.items():
+        if type == 'components':
+            template = template['modes'][template['active']]
         i = 0
         while re.search('\{\w+?\}', template) != None:
             template = re.sub('\{\w+?\}', '{x['+str(i)+']}', template, count=1)
@@ -164,7 +166,7 @@ def generateFacts(args, templates:dict):
             yield specificTemplates['pumps'].format(x=[p, s])
     
     yield f'#const maxSges = {maxSum}.'
-        
+    
     for k, x in enumerate(args.__dict__['components']):
         c, lo, hi, n = x
         yield specificTemplates['components'].format(x=[c, n, 2**k, lo, hi, hi, lo])
@@ -221,7 +223,7 @@ def main(dry:bool=False):
 
 
 if __name__ == '__main__':
-    main(False)
+    main(True)
     # try:
     #     main()
     # except:
