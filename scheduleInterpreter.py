@@ -16,14 +16,10 @@ def main():
         with open(filename, 'r') as file:
             content = file.read()
         
-        t0 = None
         solution = Solution(weights=config['weights'])
         timePat = '\\d{2}:\\d{2}:\\d{2}'
         pattern = f'({timePat}) Answer: \\d+\\n{timePat} ([\\w|\\W]*?)\\n{timePat} Optimization: (\\d+)\\n'
         for timeStr, model, score in re.findall(pattern, content):
-            if t0 == None:
-                t0 = datetime.datetime.strptime(timeStr, '%H:%M:%S')
-            print(int((datetime.datetime.strptime(timeStr, '%H:%M:%S')-t0).total_seconds()//1), end='s ')
             solution.addModel(model, score)
     
         input(filename)
