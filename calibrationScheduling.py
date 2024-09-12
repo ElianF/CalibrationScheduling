@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import clingo
 import time
 import re
@@ -17,6 +18,7 @@ class Solution:
         self.weights = weights
         self.models = list()
         self.lenModels = 0
+        self.t0 = None
 
         if self.classicDisplay:
             with open('solved.txt', 'w') as file:
@@ -94,14 +96,19 @@ class Solution:
     def addModel(self, model, score=-1):
         self.lenModels += 1
 
+        
         if self.classicDisplay:
-            answer = f'Answer: {self.lenModels}\n{str(model)}\nOptimization: {str(model.cost[0])}\n'
+            timeStr = datetime.datetime.now().time().strftime('%H:%M:%S')
+            answer = f'{timeStr} Answer: {self.lenModels}\n{timeStr} {str(model)}\n{timeStr} Optimization: {str(model.cost[0])}\n'
             with open('solved.txt', 'a') as file:
                 file.write(answer)
             print(answer, end='')
 
         else:
-            print(f'# {self.lenModels}')
+            if self.t0 == None:
+                self.t0 = datetime.datetime.now()
+
+            print(f'{int((datetime.datetime.now()-self.t0).total_seconds()//1)}s # {self.lenModels}')
             modelStats, realScore = self.traverseModel(model)
             print(modelStats)
             if type(model) != str: 
@@ -219,11 +226,11 @@ def main(dry:bool=False):
                 solution.addModel(model)
             t1 = time.time() - t0
     
-    print(t1)
+    print(t1, end='s\n')
 
 
 if __name__ == '__main__':
-    main(True)
+    main(False)
     # try:
     #     main()
     # except:
