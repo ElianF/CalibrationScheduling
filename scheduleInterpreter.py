@@ -20,7 +20,7 @@ def main():
         timePat = '\\d{2}:\\d{2}:\\d{2}'
         pattern = f'({timePat}) Answer: \\d+\\n{timePat} ([\\w|\\W]*?)\\n{timePat} Optimization: (\\d+)\\n'
         for timeStr, model, score in re.findall(pattern, content):
-            solution.addModel(model, score)
+            solution.addModel(model, score, now=datetime.datetime.strptime(timeStr, '%H:%M:%S'))
     
         input(filename)
         

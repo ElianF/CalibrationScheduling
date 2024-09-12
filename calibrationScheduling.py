@@ -93,10 +93,9 @@ class Solution:
         return '\n'.join(solutions), realScore
 
 
-    def addModel(self, model, score=-1):
+    def addModel(self, model, score=-1, now=datetime.datetime.now()):
         self.lenModels += 1
 
-        
         if self.classicDisplay:
             timeStr = datetime.datetime.now().time().strftime('%H:%M:%S')
             answer = f'{timeStr} Answer: {self.lenModels}\n{timeStr} {str(model)}\n{timeStr} Optimization: {str(model.cost[0])}\n'
@@ -106,9 +105,9 @@ class Solution:
 
         else:
             if self.t0 == None:
-                self.t0 = datetime.datetime.now()
+                self.t0 = now
+            print(f'{int((now-self.t0).total_seconds()//1)}s # {self.lenModels}')
 
-            print(f'{int((datetime.datetime.now()-self.t0).total_seconds()//1)}s # {self.lenModels}')
             modelStats, realScore = self.traverseModel(model)
             print(modelStats)
             if type(model) != str: 
