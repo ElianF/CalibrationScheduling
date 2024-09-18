@@ -6,6 +6,7 @@ import re
 import json
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 
 class Context:
@@ -19,6 +20,7 @@ class Solution:
         self.models = list()
         self.lenModels = 0
         self.t0 = None
+        self.modelScores = dict()
 
         if self.classicDisplay:
             with open('solved.txt', 'w') as file:
@@ -107,32 +109,57 @@ class Solution:
     def addModel(self, model, score=-1, now=datetime.datetime.now()):
         self.lenModels += 1
 
+        if self.t0 == None:
+            self.t0 = now
+        
+        timeDiff = int((now-self.t0).total_seconds()//1)
+
         if self.classicDisplay:
-            timeStr = datetime.datetime.now().time().strftime('%H:%M:%S')
-            answer = f'{timeStr} Answer: {self.lenModels}\n{timeStr} {str(model)}\n{timeStr} Optimization: {str(model.cost[0])}\n'
+            timeStr = now.time().strftime('%H:%M:%S')
+
+            answer  = f'{timeStr} Answer: {self.lenModels}\n'
+            answer += f'{timeStr} {modelStats:=str(model)}\n'
+            answer += f'{timeStr} Optimization: {score:=str(model.cost[0])}\n'
+
             with open('solved.txt', 'a') as file:
                 file.write(answer)
+            
             print(answer, end='')
 
         else:
-            if self.t0 == None:
-                self.t0 = now
-            print(f'{int((now-self.t0).total_seconds()//1)}s # {self.lenModels}')
-
             modelStats, realScore = self.traverseModel(model)
-            print(modelStats)
             if type(model) != str: 
                 score = model.cost[0]
-            print(f'Optimization: {score}[{realScore}]')
-            print('')
+            
+            answer  = f'{timeDiff}s # {self.lenModels}\n'
+            answer += f'{modelStats}\n'
+            answer += f'Optimization: {score}[{realScore}]\n'
+
+        print(answer)
+
+        self.modelScores[timeDiff] = (timeDiff, modelStats, score)
 
         if type(model) != str: 
             self.models.append((model, model.symbols(atoms=True)))
         
     
-    def plot(self):
-        pass
+    def plot(self, show=True):
+        timeDiffs, modelStats, scores = np.split(np.array(list(self.modelScores.values())), 3, 1)
+        timeDiffs = timeDiffs.squeeze(1).astype(int)
+        modelStats = modelStats.squeeze(1)
+        scores = scores.squeeze(1).astype(int)
 
+        min = max(0, scores.min() - 50)
+        percentile = np.percentile(scores, 95)
+
+        plt.plot(timeDiffs, scores, marker='o')
+        plt.grid()
+
+        if show: 
+            plt.gca().set(ylim=(min, percentile))
+            plt.show()
+        
+        return min, percentile
 
 
 def processCommandLineArguments():
