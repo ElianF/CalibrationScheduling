@@ -6,7 +6,7 @@ import itertools
 import json
 
 
-def main():
+def main(fullLog=False):
     with open('config.json', 'r') as file:
         config = json.load(file)
     
@@ -19,7 +19,16 @@ def main():
         solution = Solution(weights=config['weights'])
         timePat = '\\d{2}:\\d{2}:\\d{2}'
         pattern = f'({timePat}) Answer: \\d+\\n{timePat} ([\\w|\\W]*?)\\n{timePat} Optimization: (\\d+)\\n'
-        for timeStr, model, score in re.findall(pattern, content):
+
+        iterModels = re.findall(pattern, content)
+        
+        if not fullLog:
+            tmp = dict()
+            for timeStr, model, score in iterModels:
+                tmp[timeStr] = (timeStr, model, score)
+            iterModels = tmp.values()
+
+        for timeStr, model, score in iterModels:
             solution.addModel(model, score, now=datetime.datetime.strptime(timeStr, '%H:%M:%S'))
     
         input(filename)
