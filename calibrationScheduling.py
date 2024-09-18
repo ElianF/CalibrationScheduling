@@ -37,11 +37,11 @@ class Solution:
         solutions = re.findall(pattern, str(model))
 
         comps = pd.DataFrame(index=list(), columns=list(), dtype=str)
-        settings = pd.DataFrame(index=list(), columns=list(), dtype=str)
-        realRatios = pd.DataFrame(index=list(), columns=list())
+        settings = pd.DataFrame(index=list(), columns=list(), dtype=int)
+        realRatios = pd.DataFrame(index=list(), columns=list(), dtype=int)
         ratios = pd.DataFrame(index=list(), columns=list(), dtype=str)
-        realCoverage = pd.DataFrame(index=list(), columns=['eCov', 'max'])
-        coverage = pd.DataFrame(index=list(), columns=['eCov', 'max'])
+        realCoverage = pd.DataFrame(index=list(), columns=['eCov', 'max'], dtype=int)
+        coverage = pd.DataFrame(index=list(), columns=['eCov', 'max'], dtype=str)
         messCount = dict()
         for predicate, args in solutions.copy():
             if predicate == 'validMess':
@@ -52,7 +52,6 @@ class Solution:
                 comps.loc[m, p] = c
                 settings.loc[m, p] = s
                 solutions.remove((predicate, args))
-        intSettings = settings.copy().fillna(0).astype(int)
         for predicate, args in solutions.copy():
             if predicate == 'isRatio':
                 m, c, r = args.split(',')
@@ -60,7 +59,7 @@ class Solution:
                 r = int(r)
                 mask = comps.loc[m] == c
                 p = comps.loc[m, mask].index[0]
-                real_r = int(100 * intSettings.loc[m, p] / sum(intSettings.loc[m]))
+                real_r = int(100 * settings.fillna(0).loc[m, p] / sum(settings.fillna(0).loc[m]))
                 realRatios.loc[m, p] = real_r
                 ratios.loc[m, p] = f'{r}[{real_r}]'
                 solutions.remove((predicate, args))
@@ -70,7 +69,7 @@ class Solution:
                 d = int(d)
                 values = realRatios[comps == c].to_numpy().flatten()
                 sortedValues = np.sort(values[~np.isnan(values)]).astype(int).flatten()
-                real_d = (sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1)
+                real_d = int((sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1))
                 realCoverage.loc[c, 'eCov'] = real_d
                 coverage.loc[c, 'eCov'] = f'{d}{[real_d]}'
                 solutions.remove((predicate, args))
@@ -100,7 +99,7 @@ class Solution:
                 df.sort_index(axis=i, inplace=True)
         for i in range(2):
             settings.sort_index(axis=i, inplace=True)
-        solutions = ['\n'.join(map(lambda x: str(x.fillna('').transpose()), [comps, settings, ratios, coverage]))]
+        solutions = ['\n'.join(map(lambda x: str(x.astype(str).fillna('').transpose()), [comps, settings, ratios, coverage]))]
         
         return '\n'.join(solutions), realScore
 
@@ -129,6 +128,10 @@ class Solution:
 
         if type(model) != str: 
             self.models.append((model, model.symbols(atoms=True)))
+        
+    
+    def plot(self):
+        pass
 
 
 

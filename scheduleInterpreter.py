@@ -30,6 +30,8 @@ def main(fullLog=False):
 
         for timeStr, model, score in iterModels:
             solution.addModel(model, score, now=datetime.datetime.strptime(timeStr, '%H:%M:%S'))
+        
+        solution.plot()
     
         input(filename)
         
