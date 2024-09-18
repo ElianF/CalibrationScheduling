@@ -106,7 +106,7 @@ class Solution:
         return '\n'.join(solutions), realScore
 
 
-    def addModel(self, model, score=-1, now=datetime.datetime.now()):
+    def addModel(self, model, quiet=False, score=-1, now=datetime.datetime.now()):
         self.lenModels += 1
 
         if self.t0 == None:
@@ -123,8 +123,6 @@ class Solution:
 
             with open('solved.txt', 'a') as file:
                 file.write(answer)
-            
-            print(answer, end='')
 
         else:
             modelStats, realScore = self.traverseModel(model)
@@ -135,7 +133,7 @@ class Solution:
             answer += f'{modelStats}\n'
             answer += f'Optimization: {score}[{realScore}]\n'
 
-        print(answer)
+        if not quiet: print(answer)
 
         self.modelScores[timeDiff] = (timeDiff, modelStats, score)
 
@@ -150,13 +148,13 @@ class Solution:
         scores = scores.squeeze(1).astype(int)
 
         min = max(0, scores.min() - 50)
-        percentile = np.percentile(scores, 95)
+        percentile = np.percentile(scores, 90, method='lower') + 50
 
-        plt.plot(timeDiffs, scores, marker='o')
-        plt.grid()
+        plt.plot(np.sqrt(timeDiffs), scores, marker='o')
 
         if show: 
             plt.gca().set(ylim=(min, percentile))
+            plt.grid()
             plt.show()
         
         return min, percentile
