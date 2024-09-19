@@ -139,13 +139,22 @@ class Solution:
 
         if type(model) != str: 
             self.models.append((model, model.symbols(atoms=True)))
-        
     
+
+    def finish(self, result):
+        self.isOptimal = not result.interrupted
+    
+
     def plot(self, show=True):
         timeDiffs, modelStats, scores = np.split(np.array(list(self.modelScores.values())), 3, 1)
         timeDiffs = timeDiffs.squeeze(1).astype(int)
         modelStats = modelStats.squeeze(1)
         scores = scores.squeeze(1).astype(int)
+
+        if not self.isOptimal:
+            timeDiffs = np.concatenate((timeDiffs, [4000]))
+            modelStats = np.concatenate((modelStats, ['']))
+            scores = np.concatenate((scores, [scores[-1]]))
 
         min = max(0, scores.min() - 50)
         percentile = np.percentile(scores, 90, method='lower') + 50
@@ -153,7 +162,7 @@ class Solution:
         plt.plot(np.sqrt(timeDiffs), scores, marker='o')
 
         if show: 
-            plt.gca().set(ylim=(min, percentile))
+            plt.gca().set(xlim=(0, 60), ylim=(min, percentile))
             plt.grid()
             plt.show()
         
@@ -254,12 +263,12 @@ def main(dry:bool=False):
     if (n:=config['count']) <= 0:
         # solve it and total number of models and time necessary
         t0 = time.time()
-        ctl.solve(on_model=solution.addModel)
+        ctl.solve(on_model=solution.addModel, on_finish=solution.finish)
         t1 = time.time() - t0
 
     else:
         # solve it partially and print every calculated without statistics
-        with ctl.solve(yield_=True) as handle:
+        with ctl.solve(yield_=True, on_finish=solution.finish) as handle:
             t0 = time.time()
             for _, model in zip(range(n), handle):
                 solution.addModel(model)
@@ -269,7 +278,7 @@ def main(dry:bool=False):
 
 
 if __name__ == '__main__':
-    main(True)
+    main(False)
     # try:
     #     main()
     # except:

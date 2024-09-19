@@ -14,7 +14,7 @@ def main(plot=True):
     with open('config.json', 'r') as file:
         config = json.load(file)
     
-    files = [file for file in os.listdir(os.getcwd()) if file.endswith('.md') and file != 'ground.txt']
+    files = [file for file in os.listdir(os.getcwd()) if (file.endswith('.md') or file.endswith('.txt')) and file != 'ground.txt']
 
     for filename in files:
         with open(filename, 'r') as file:
@@ -27,6 +27,8 @@ def main(plot=True):
         for timeStr, model, score in re.findall(pattern, content):
             solution.addModel(model, quiet=plot, score=score, now=datetime.datetime.strptime(timeStr, '%H:%M:%S'))
         
+        solution.isOptimal = re.search('OPTIMUM FOUND', content) != None
+
         if plot:
             min, percentile = solution.plot(show=False)
             if min < ylim[0]:
@@ -37,7 +39,7 @@ def main(plot=True):
             input(filename)
 
     if plot:
-        plt.gca().set(ylim=ylim)
+        plt.gca().set(xlim=(0, 60), ylim=ylim)
         plt.grid
         plt.show()
 
