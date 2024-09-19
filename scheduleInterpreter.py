@@ -30,7 +30,8 @@ def main(plot=True):
         solution.isOptimal = re.search('OPTIMUM FOUND', content) != None
 
         if plot:
-            min, percentile = solution.plot(show=False)
+            min, percentile = solution.plot(show=False, label=filename)
+            solution.plot(show=False, trueScore=True, color=plt.gca().lines[-1].get_color())
             if min < ylim[0]:
                 ylim[0] = min
             if ylim[1] < percentile:
@@ -39,8 +40,10 @@ def main(plot=True):
             input(filename)
 
     if plot:
-        plt.gca().set(xlim=(0, 60), ylim=ylim)
-        plt.grid
+        plt.gca().set(xlim=(0, 3650), ylim=ylim)
+        plt.xscale('symLog')
+        plt.grid()
+        plt.legend()
         plt.show()
 
 

@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import math
 import clingo
 import time
 import re
@@ -135,7 +136,7 @@ class Solution:
 
         if not quiet: print(answer)
 
-        self.modelScores[timeDiff] = (timeDiff, modelStats, score)
+        self.modelScores[timeDiff] = (timeDiff, modelStats, score, realScore)
 
         if type(model) != str: 
             self.models.append((model, model.symbols(atoms=True)))
@@ -145,11 +146,14 @@ class Solution:
         self.isOptimal = not result.interrupted
     
 
-    def plot(self, show=True):
-        timeDiffs, modelStats, scores = np.split(np.array(list(self.modelScores.values())), 3, 1)
+    def plot(self, show=True, trueScore=False, label=None, color=None):
+        timeDiffs, modelStats, scores, realScores = np.split(np.array(list(self.modelScores.values())), 4, 1)
         timeDiffs = timeDiffs.squeeze(1).astype(int)
         modelStats = modelStats.squeeze(1)
-        scores = scores.squeeze(1).astype(int)
+        if trueScore:
+            scores = realScores.squeeze(1).astype(int)
+        else:
+            scores = scores.squeeze(1).astype(int)
 
         if not self.isOptimal:
             timeDiffs = np.concatenate((timeDiffs, [4000]))
@@ -159,10 +163,14 @@ class Solution:
         min = max(0, scores.min() - 50)
         percentile = np.percentile(scores, 90, method='lower') + 50
 
-        plt.plot(np.sqrt(timeDiffs), scores, marker='o')
+        if trueScore:
+            plt.plot(timeDiffs, scores, linestyle='--', marker='o', label=label, color=color)
+        else:
+            plt.plot(timeDiffs, scores, marker='o', label=label, color=color)
 
         if show: 
-            plt.gca().set(xlim=(0, 60), ylim=(min, percentile))
+            plt.gca().set(xlim=(0, 3650), ylim=(min, percentile))
+            plt.xscale('symLog')
             plt.grid()
             plt.show()
         
