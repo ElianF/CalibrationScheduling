@@ -7,3 +7,5 @@ solved.txt
 __pycache__/*
 solves/*
 *.md
+venv/
+plots/

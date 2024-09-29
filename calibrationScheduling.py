@@ -148,7 +148,7 @@ class Solution:
 
     def plot(self, show=True, trueScore=False, label=None, color=None, dry=False):
         timeDiffs, modelStats, scores, realScores = np.split(np.array(list(self.modelScores.values())), 4, 1)
-        timeDiffs = timeDiffs.squeeze(1).astype(int)
+        timeDiffs = timeDiffs.squeeze(1).astype(int) + 1
         modelStats = modelStats.squeeze(1)
         if trueScore:
             scores = realScores.squeeze(1).astype(int)
@@ -160,8 +160,10 @@ class Solution:
             modelStats = np.concatenate((modelStats, ['']))
             scores = np.concatenate((scores, [scores[-1]]))
 
-        min = max(0, scores.min() - 50)
-        percentile = np.percentile(scores, 90, method='lower') + 50
+        xmin = timeDiffs.min()
+        xmax = timeDiffs.max()
+        ymin = max(1, scores.min() - 50)
+        ymax = np.percentile(scores, 90, method='lower') + 50
 
         if not dry:
             if trueScore:
@@ -170,12 +172,12 @@ class Solution:
                 plt.plot(timeDiffs, scores, marker='o', label=label, color=color)
 
             if show: 
-                plt.gca().set(xlim=(0, 3650), ylim=(min, percentile))
+                plt.gca().set(xlim=(1, plt.gca().get_xlim()[1]), ylim=(min, ymax))
                 plt.xscale('symLog')
                 plt.grid()
                 plt.show()
         
-        return min, percentile
+        return (xmin, xmax), (ymin, ymax)
 
 
 def processCommandLineArguments():
