@@ -7,3 +7,4 @@ solved.txt
 __pycache__/*
 solves/*
 *.md
+plots.json

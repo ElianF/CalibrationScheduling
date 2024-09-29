@@ -146,7 +146,7 @@ class Solution:
         self.isOptimal = not result.interrupted
     
 
-    def plot(self, show=True, trueScore=False, label=None, color=None):
+    def plot(self, show=True, trueScore=False, label=None, color=None, dry=False):
         timeDiffs, modelStats, scores, realScores = np.split(np.array(list(self.modelScores.values())), 4, 1)
         timeDiffs = timeDiffs.squeeze(1).astype(int)
         modelStats = modelStats.squeeze(1)
@@ -163,16 +163,17 @@ class Solution:
         min = max(0, scores.min() - 50)
         percentile = np.percentile(scores, 90, method='lower') + 50
 
-        if trueScore:
-            plt.plot(timeDiffs, scores, linestyle='--', marker='o', label=label, color=color)
-        else:
-            plt.plot(timeDiffs, scores, marker='o', label=label, color=color)
+        if not dry:
+            if trueScore:
+                plt.plot(timeDiffs, scores, linestyle='--', marker='o', label=label, color=color)
+            else:
+                plt.plot(timeDiffs, scores, marker='o', label=label, color=color)
 
-        if show: 
-            plt.gca().set(xlim=(0, 3650), ylim=(min, percentile))
-            plt.xscale('symLog')
-            plt.grid()
-            plt.show()
+            if show: 
+                plt.gca().set(xlim=(0, 3650), ylim=(min, percentile))
+                plt.xscale('symLog')
+                plt.grid()
+                plt.show()
         
         return min, percentile
 
@@ -286,7 +287,7 @@ def main(dry:bool=False):
 
 
 if __name__ == '__main__':
-    main(False)
+    main(True)
     # try:
     #     main()
     # except:
