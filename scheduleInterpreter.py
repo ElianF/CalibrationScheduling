@@ -51,7 +51,10 @@ def main(plot=True, show=True):
             plt.grid()
             plt.legend()
             plt.savefig(os.path.join('plots', f'{title}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
-            if show: plt.show()
+            if show: 
+                plt.show()
+            else:
+                plt.close()
 
 
 if __name__ == '__main__':
