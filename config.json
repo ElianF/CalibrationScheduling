@@ -3,8 +3,8 @@
         "pumps": "validPump({p}, {s}).",
         "components": {
             "modes": {
-                "force": "defComp({c}, Lo, Hi, D, {n}, {z}) :- Lo = {lo} / acc * acc , Hi = (({hi} - 1) / acc + 1) * acc, D = {hi} - {lo}.",
-                "safe":  "defComp({c}, Lo, Hi, D, {n}, {z}) :- Lo = (({lo} - 1) / acc + 1) * acc , Hi = {hi} / acc * acc, D = {hi} - {lo}."
+                "force": "defComp({c}, Lo, Hi, D, {n}, {z}) :- Lo = {lo} / err * err , Hi = (({hi} - 1) / err + 1) * err, D = {hi} - {lo}.",
+                "safe":  "defComp({c}, Lo, Hi, D, {n}, {z}) :- Lo = (({lo} - 1) / err + 1) * err , Hi = {hi} / err * err, D = {hi} - {lo}."
             },
             "active": "force"
         }

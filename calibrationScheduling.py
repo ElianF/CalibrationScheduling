@@ -192,7 +192,7 @@ def processCommandLineArguments():
     # add all arguments
     parser.add_argument('-p', '--pumps', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
     parser.add_argument('-c', '--components', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
-    parser.add_argument('-a', '--accuracy', default=1, type=lambda s: validate('\d+', s, int))
+    parser.add_argument('-e', '--error', default=1, type=lambda s: validate('\d+', s, int))
     
     args = parser.parse_args()
 
@@ -207,8 +207,8 @@ def processCommandLineArguments():
             parser.error(f'range of pump {name} must be of the form (name, start, end, step)')
         elif step <= 0:
             parser.error(f'step of pump {name} must be a positive number')
-    if args.accuracy == 0:
-        parser.error('accuracy must be strictly greater than 0')
+    if args.error == 0:
+        parser.error('error must be strictly greater than 0')
     
     return args
 
@@ -248,7 +248,7 @@ def main(dry:bool=False):
 
     # insert facts from command line arguments
     args = processCommandLineArguments()
-    ctl = clingo.Control(['-c', f'acc={args.accuracy}'])
+    ctl = clingo.Control(['-c', f'err={args.error}'])
     facts = list(generateFacts(args, config['templates']))
     ctl.add('base', [], ' '.join(facts))
     # insert clingo code into ctl

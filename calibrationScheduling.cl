@@ -26,7 +26,7 @@ id1Mess(M, X) :- X = #sum{_Z : validMess(M, _P, _S, _C), defComp(_C, _Lo, _Hi, _
 isRatio(M, C, R) :- validMess(M, P, S, C),
                     Sges = #sum{_S, _C: validMess(M, _P, _S, _C)}, 
                     Sges <= maxSges,
-                    R = (2 * ((S * 100) / Sges) + acc) / (2*acc) * acc.
+                    R = (2 * ((S * 100) / Sges) + err) / (2*err) * err.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, D, N, Z), R < Lo.
 :- isRatio(M, C, R), defComp(C, Lo, Hi, D, N, Z), Hi < R.
 
