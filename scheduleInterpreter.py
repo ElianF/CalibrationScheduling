@@ -17,14 +17,17 @@ def main(plot=True, show=True):
         plots = json.load(file)
 
     for real in [False, True]:
-        # totalFiles = [file for file in os.listdir(os.getcwd()) if (file.endswith('.md') or file.endswith('.txt')) and file != 'ground.txt']
-        # for title, files in [(None, len(totalFiles), totalFiles)]:
-        for title, threshold, files in itertools.chain(*[[(test, i, list(map(lambda x: x+'.md', totalFiles))) for i in range(1, 1+len(totalFiles))] for test, totalFiles in plots.items()]):
+        # totalFiles = [(file, os.path.basename(file)) for file in os.listdir(os.getcwd()) if (file.endswith('.md') or file.endswith('.txt')) and file != 'ground.txt']
+        # for name, threshold, title, files in [(None, len(totalFiles), None, totalFiles)]:
+        for name, threshold, title, files in itertools.chain(*[[(test, i, db['title'], list(map(lambda x: (x[0]+'.md', x[1]), db['content'].items()))) for i in range(1, 1+len(db['content']))] for test, db in plots.items()]):
 
             xlim = [3650, 1]
             ylim = [math.inf, 0]
 
-            for filename in files:
+            for filename, label in files:
+                if not os.path.exists(filename):
+                    break
+
                 with open(filename, 'r') as file:
                     content = file.read()
                 
@@ -38,7 +41,7 @@ def main(plot=True, show=True):
                 solution.isOptimal = re.search('OPTIMUM FOUND', content) != None
 
                 if plot:
-                    (xmin, xmax), (ymin, ymax) = solution.plot(show=False, label=filename, dry=(filename not in files[:threshold]))
+                    (xmin, xmax), (ymin, ymax) = solution.plot(show=False, label=label, dry=(filename not in [filename for filename, _ in files][:threshold]))
                     if real: solution.plot(show=False, trueScore=True, color=plt.gca().lines[-1].get_color(), dry=(filename not in files[:threshold]))
                     if xmin < xlim[0]:
                         xlim[0] = xmin
@@ -50,18 +53,21 @@ def main(plot=True, show=True):
                         ylim[1] = ymax
                 else:
                     input(filename)
-
-            if plot:
-                plt.gca().set(xlim=xlim, ylim=ylim)
-                plt.xscale('log')
-                plt.grid()
-                plt.legend()
-                plt.savefig(os.path.join('plots', f'{title}{"+" if real else ""}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
-                if show: 
-                    plt.show()
-                else:
-                    plt.close()
+            else:
+                if plot:
+                    plt.gca().set(xlim=xlim, ylim=ylim)
+                    plt.xscale('log')
+                    plt.xlabel('time [s]')
+                    plt.ylabel('score [a.u.]')
+                    plt.grid()
+                    plt.legend()
+                    plt.title(title)
+                    plt.savefig(os.path.join('plots', f'{title}{"+" if real else ""}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
+                    if show: 
+                        plt.show()
+                    else:
+                        plt.close()
 
 
 if __name__ == '__main__':
-    main(plot=True, show=False)
+    main(plot=True, show=True)
