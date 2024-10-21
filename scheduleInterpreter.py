@@ -63,7 +63,7 @@ def main(plot=True, show=True):
                     plt.grid()
                     plt.legend()
                     plt.title(title)
-                    plt.savefig(os.path.join('plots', f'{title}{"+" if real else ""}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
+                    plt.savefig(os.path.join('plots', f'{title.replace(" ", "-")}{"+" if real else ""}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
                     if show: 
                         plt.show()
                     else:
