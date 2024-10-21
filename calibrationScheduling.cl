@@ -12,7 +12,7 @@ isComp(C) :- defComp(C, Lo, Hi, D, N, Z).
 :- Nreal = #count{_M : validMess(_M, _P, _S, C)}, Nreal != N, defComp(C, Lo, Hi, D, N, Z), C != x.
 
 %% per measurement
-% at least two compounts are measured
+% at least two components are measured
 :- X = #count{_C : validMess(M, _P, _S, _C)}, 0 < X, X < 2, isMess(M).
 
 % remove redundant measurement due to symmetry
@@ -36,7 +36,7 @@ isRatio(M, C, R) :- validMess(M, P, S, C),
 :- validMess(M, P, S, C), validMess(M, P', S', C'),          S != S', C  = C'. % every components gets unique setting
 
 % soft constraints
-% minimize variance through maximizing minimal distance between ratios
+% minimize variance by maximizing minimal distance between ratios
 % effectiveCoverage(C, ECov) :- defComp(C, Lo, Hi, D, N, Z),
 %                               C != x,
 %                               Dmin = #min{_R-_R' : isRatio(_M, C, _R), isRatio(_M', C, _R'), _M != _M', _R >= % _R'},
@@ -51,7 +51,7 @@ isRatio(M, C, R) :- validMess(M, P, S, C),
 var(C, V) :- isComp(C),
              X = #sum{_R, _M : isRatio(_M, C, _R)},
              N = #count{_R, _M : isRatio(_M, C, _R)},
-             My = X / N,
-             Y = #sum{(_R-My)^2, _M : isRatio(_M, C, _R)},
+             Mu = X / N,
+             Y = #sum{(_R-Mu)^2, _M : isRatio(_M, C, _R)},
              V = Y / N.
 #minimize{V, C : var(C, V)}.

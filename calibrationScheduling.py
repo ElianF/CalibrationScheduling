@@ -43,8 +43,8 @@ class Solution:
         settings = pd.DataFrame(index=list(), columns=list(), dtype=int)
         realRatios = pd.DataFrame(index=list(), columns=list(), dtype=int)
         ratios = pd.DataFrame(index=list(), columns=list(), dtype=str)
-        realCoverage = pd.DataFrame(index=list(), columns=['eCov', 'max'], dtype=int)
-        coverage = pd.DataFrame(index=list(), columns=['eCov', 'max'], dtype=str)
+        realCoverage = pd.DataFrame(index=list(), columns=['eCov', 'max', 'var'], dtype=int)
+        coverage = pd.DataFrame(index=list(), columns=['eCov', 'max', 'var'], dtype=str)
         messCount = dict()
         for predicate, args in solutions.copy():
             if predicate == 'validMess':
@@ -75,6 +75,15 @@ class Solution:
                 real_d = int((sortedValues[1:]-sortedValues[:-1]).min() * (messCount[c]-1))
                 realCoverage.loc[c, 'eCov'] = real_d
                 coverage.loc[c, 'eCov'] = f'{d}{[real_d]}'
+                r = realRatios[comps == c].values
+                r = np.ravel(r[~np.isnan(r)])
+                my = r.sum() / r.size
+                if d == 0:
+                    var = -1
+                else:
+                    var = np.power(r-my, 2).sum() / r.size / d
+                realCoverage.loc[c, 'var'] = var
+                coverage.loc[c, 'var'] = int(var)
                 solutions.remove((predicate, args))
             elif predicate == 'defComp':
                 c, lo, hi, d, n, z = args.split(',')
@@ -97,6 +106,8 @@ class Solution:
             cov = realCoverage.loc[c, 'eCov']
             realScore += int(self.weights['eCov'] * 100 * d / (cov+1))
         
+        var = int(realCoverage.loc[:, 'var'].sum())
+
         for df in [comps, settings, ratios, coverage]:
             for i in range(2):
                 df.sort_index(axis=i, inplace=True)
@@ -104,7 +115,7 @@ class Solution:
             settings.sort_index(axis=i, inplace=True)
         solutions = ['\n'.join(map(lambda x: str(x.astype(str).fillna('').transpose()), [comps, settings, ratios, coverage]))]
         
-        return '\n'.join(solutions), realScore
+        return '\n'.join(solutions), realScore, var
 
 
     def addModel(self, model, quiet=False, score=-1, now=datetime.datetime.now()):
@@ -126,17 +137,17 @@ class Solution:
                 file.write(answer)
 
         else:
-            modelStats, realScore = self.traverseModel(model)
+            modelStats, realScore, var = self.traverseModel(model)
             if type(model) != str: 
                 score = model.cost[0]
             
             answer  = f'{timeDiff}s # {self.lenModels}\n'
             answer += f'{modelStats}\n'
-            answer += f'Optimization: {score}[{realScore}]\n'
+            answer += f'Optimization: {score}[{realScore}|{var}]\n'
 
         if not quiet: print(answer)
 
-        self.modelScores[timeDiff] = (timeDiff, modelStats, score, realScore)
+        self.modelScores[timeDiff] = (timeDiff, modelStats, score, realScore, var)
 
         if type(model) != str: 
             self.models.append((model, model.symbols(atoms=True)))
@@ -146,14 +157,15 @@ class Solution:
         self.isOptimal = not result.interrupted
     
 
-    def plot(self, show=True, trueScore=False, label=None, color=None, dry=False):
-        timeDiffs, modelStats, scores, realScores = np.split(np.array(list(self.modelScores.values())), 4, 1)
+    def plot(self, show=True, trueScore=False, variance=False, label=None, color=None, dry=False):
+        timeDiffs, modelStats, scores, realScores, vars = np.split(np.array(list(self.modelScores.values())), 5, 1)
         timeDiffs = timeDiffs.squeeze(1).astype(int) + 1
         modelStats = modelStats.squeeze(1)
+        scores = scores.squeeze(1).astype(int)
         if trueScore:
             scores = realScores.squeeze(1).astype(int)
-        else:
-            scores = scores.squeeze(1).astype(int)
+        if variance:
+            scores = vars.squeeze(1).astype(int)
 
         if not self.isOptimal:
             timeDiffs = np.concatenate((timeDiffs, [4000]))

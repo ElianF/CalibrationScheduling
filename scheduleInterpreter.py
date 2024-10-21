@@ -41,8 +41,9 @@ def main(plot=True, show=True):
                 solution.isOptimal = re.search('OPTIMUM FOUND', content) != None
 
                 if plot:
-                    (xmin, xmax), (ymin, ymax) = solution.plot(show=False, label=label, dry=(filename not in [filename for filename, _ in files][:threshold]))
-                    if real: solution.plot(show=False, trueScore=True, color=plt.gca().lines[-1].get_color(), dry=(filename not in files[:threshold]))
+                    dry = (filename not in [filename for filename, _ in files][:threshold])
+                    (xmin, xmax), (ymin, ymax) = solution.plot(show=False, label=label, dry=dry)
+                    if real: solution.plot(show=False, trueScore=True, color=plt.gca().lines[-1].get_color(), dry=dry)
                     if xmin < xlim[0]:
                         xlim[0] = xmin
                     if xlim[1] < xmax:
