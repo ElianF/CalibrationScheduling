@@ -26,6 +26,7 @@ def drawGraph(ax, totalbounds:list[int], bounds:list[int], points:list[int], tit
 def main(show=False):
     graphsJson = pathlib.Path('intervallgraphs.json')
     savePath = lambda name: pathlib.Path('intervallgraphs', name+'.png')
+    savePath('').parent.mkdir(exist_ok=True)
 
     graphsJson = json.loads(graphsJson.read_bytes())
 
@@ -37,14 +38,15 @@ def main(show=False):
             if bound[1] > totalbounds[1]:
                 totalbounds[1] = bound[1]
 
-        fig, ax = plt.subplots(nrows=len(graphs), figsize=(6, 1*len(graphs)), layout="constrained")
-        for i, d in enumerate(graphs):
-            title, bounds, pointsGroup = [d[key] for key in d]
+        for j in range(len(graphs[0]['points'])):
+            fig, ax = plt.subplots(nrows=len(graphs), figsize=(6, 1*len(graphs)), layout="constrained")
+            for i, d in enumerate(graphs):
+                title, bounds, pointsGroup = [d[key] for key in d]
 
-            drawGraph(ax[i], totalbounds=totalbounds, bounds=bounds, points=pointsGroup[0], title=title)
-        # plt.savefig(str(savePath('_'.join([name]))))
-        if show: plt.show()
+                drawGraph(ax[i], totalbounds=totalbounds, bounds=bounds, points=pointsGroup[j], title=title)
+            plt.savefig(str(savePath('_'.join([name, str(j)]))))
+            if show: plt.show()
 
 
 if __name__ == '__main__':
-    main(show=True)
+    main(show=False)
