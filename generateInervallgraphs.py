@@ -23,26 +23,28 @@ def drawGraph(ax, totalbounds:list[int], bounds:list[int], points:list[int], tit
         ax.annotate(str(date), xy=(date, 0), xytext=(date, -0.04))
 
 
-def main():
+def main(show=False):
     graphsJson = pathlib.Path('intervallgraphs.json')
+    savePath = lambda name: pathlib.Path('intervallgraphs', name+'.png')
 
-    graphs = json.loads(graphsJson.read_bytes())
+    graphsJson = json.loads(graphsJson.read_bytes())
 
-    totalbounds = [100, 0]
-    for bound in map(lambda g: g['bounds'], graphs):
-        if bound[0] < totalbounds[0]:
-            totalbounds[0] = bound[0]
-        if bound[1] > totalbounds[1]:
-            totalbounds[1] = bound[1]
+    for name, graphs in graphsJson.items():
+        totalbounds = [100, 0]
+        for bound in map(lambda g: g['bounds'], graphs):
+            if bound[0] < totalbounds[0]:
+                totalbounds[0] = bound[0]
+            if bound[1] > totalbounds[1]:
+                totalbounds[1] = bound[1]
 
-    fig, ax = plt.subplots(nrows=len(graphs), figsize=(6, 1*len(graphs)), layout="constrained")
-    for i, d in enumerate(graphs):
-        title, bounds, pointsGroup = [d[key] for key in d]
+        fig, ax = plt.subplots(nrows=len(graphs), figsize=(6, 1*len(graphs)), layout="constrained")
+        for i, d in enumerate(graphs):
+            title, bounds, pointsGroup = [d[key] for key in d]
 
-        drawGraph(ax[i], totalbounds=totalbounds, bounds=bounds, points=pointsGroup[0], title=title)
-    plt.savefig('test.png')
-    plt.show()
+            drawGraph(ax[i], totalbounds=totalbounds, bounds=bounds, points=pointsGroup[0], title=title)
+        # plt.savefig(str(savePath('_'.join([name]))))
+        if show: plt.show()
 
 
 if __name__ == '__main__':
-    main()
+    main(show=True)
