@@ -176,6 +176,7 @@ class Solution:
         xmax = timeDiffs.max()
         ymin = max(1, scores.min() - 50)
         ymax = np.percentile(scores, 90, method='lower') + 50
+        # ymax = np.percentile(scores, 100, method='lower') + 50
 
         if not dry:
             if trueScore:
@@ -301,8 +302,4 @@ def main(dry:bool=False):
 
 
 if __name__ == '__main__':
-    main(True)
-    # try:
-    #     main()
-    # except:
-    #     pass
+    main(False)

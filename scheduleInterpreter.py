@@ -21,7 +21,10 @@ def main(plot=True, show=True):
         # for name, threshold, title, files in [(None, len(totalFiles), None, totalFiles)]:
         for name, threshold, title, files in itertools.chain(*[[(test, i, db['title'], list(map(lambda x: (x[0]+'.md', x[1]), db['content'].items()))) for i in range(1, 1+len(db['content']))] for test, db in plots.items()]):
 
-            xlim = [3650, 1]
+            # if name not in []:
+            #     continue
+
+            xlim = [1*3600 + 50, 1]
             ylim = [math.inf, 0]
 
             for filename, label in files:
@@ -61,7 +64,8 @@ def main(plot=True, show=True):
                     plt.xlabel('time [s]')
                     plt.ylabel('score [a.u.]')
                     plt.grid()
-                    plt.legend()
+                    if all([label != '' for _, label in files]):
+                        plt.legend()
                     plt.title(title)
                     plt.savefig(os.path.join('plots', f'{title.replace(" ", "-")}{"+" if real else ""}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
                     if show: 
@@ -71,4 +75,4 @@ def main(plot=True, show=True):
 
 
 if __name__ == '__main__':
-    main(plot=True, show=True)
+    main(plot=True, show=False)
