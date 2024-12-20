@@ -51,7 +51,7 @@
         "title": "Pumpenspannweite",
         "content": {
             "T6_1": "a1+a2",
-            "T6_2": "a1+c1",
+            "T6_2": "a1+d1",
             "T6_3": "a1+b1",
             "T6_4": "a1+e1",
             "T6_5": "a1+c1"
@@ -75,6 +75,24 @@
             "T8_3": "15",
             "T8_4": "20",
             "T8_5": "25"
+        }
+    },
+    "T10": {
+        "title": "effective Coverage",
+        "content": {
+            "T10_1": ""
+        }
+    },
+    "T12_1": {
+        "title": "vereinfachtes Echtweltbeispiel",
+        "content": {
+            "T12_1": ""
+        }
+    },
+    "T12_2": {
+        "title": "vereinfachtes Echtweltbeispiel",
+        "content": {
+            "T12_2": ""
         }
     }
 }
