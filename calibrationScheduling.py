@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import math
 import os
 import clingo
 import time
