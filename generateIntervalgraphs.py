@@ -22,8 +22,8 @@ def drawGraph(ax, totalbounds:list[int], bounds:list[int], points:list[int], tit
 
 
 def main(show=False):
-    graphsJson = pathlib.Path('intervallgraphs.json')
-    savePath = lambda name: pathlib.Path('intervallgraphs', name+'.png')
+    graphsJson = pathlib.Path('intervalgraphs.json')
+    savePath = lambda name: pathlib.Path('intervalgraphs', name+'.png')
     savePath('').parent.mkdir(exist_ok=True)
 
     graphsJson = json.loads(graphsJson.read_bytes())

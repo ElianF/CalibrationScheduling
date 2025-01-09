@@ -17,9 +17,11 @@ def main(plot=True, show=True):
         plots = json.load(file)
 
     for real in [False, True]:
-        # totalFiles = [(file, os.path.basename(file)) for file in os.listdir(os.getcwd()) if (file.endswith('.md') or file.endswith('.txt')) and file != 'ground.txt']
-        # for name, threshold, title, files in [(None, len(totalFiles), None, totalFiles)]:
-        for name, threshold, title, files in itertools.chain(*[[(test, i, db['title'], list(map(lambda x: (x[0]+'.md', x[1]), db['content'].items()))) for i in range(1, 1+len(db['content']))] for test, db in plots.items()]):
+        totalFiles = [(os.path.join('results', file), os.path.basename(file)) for file in os.listdir(os.path.join(os.getcwd(), 'results')) if (file.endswith('.md') or file.endswith('.txt')) and file not in  ('ground.txt', 'README.md')]
+        localIter = [(None, len(totalFiles), str(datetime.datetime.now().isoformat(timespec="seconds")), totalFiles)]
+        plotsIter = itertools.chain(*[[(test, i, db['title'], list(map(lambda x: (x[0]+'.md', x[1]), db['content'].items()))) for i in range(1, 1+len(db['content']))] for test, db in plots.items()])
+
+        for name, threshold, title, files in itertools.chain(localIter, plotsIter):
 
             # if name not in []:
             #     continue
@@ -67,7 +69,7 @@ def main(plot=True, show=True):
                     if all([label != '' for _, label in files]):
                         plt.legend()
                     plt.title(title)
-                    plt.savefig(os.path.join('plots', f'{title.replace(" ", "-")}{"+" if real else ""}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
+                    plt.savefig(os.path.join('plots', f'{title.replace(" ", "-").replace(":", "")}{"+" if real else ""}_{str(threshold).zfill(1+int(math.log10(len(files))//1))}.png'))
                     if show: 
                         plt.show()
                     else:

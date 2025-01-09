@@ -10,3 +10,4 @@ solves/*
 venv/
 plots/
 intervallgraphs/
+results/*

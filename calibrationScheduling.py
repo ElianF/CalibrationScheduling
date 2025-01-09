@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import math
+import os
 import clingo
 import time
 import re
@@ -23,9 +24,10 @@ class Solution:
         self.t0 = None
         self.modelScores = dict()
 
-        if self.classicDisplay:
-            with open('solved.txt', 'w') as file:
-                file.write('')
+        self.resultFile = os.path.join('results', datetime.datetime.now().isoformat(timespec="seconds").replace(":", "") + '.txt')
+        os.makedirs('results', exist_ok=True)
+        with open(self.resultFile, 'w') as file:
+            file.write('')
  
     def __str__(self):
         return '\n'.join([f'# {n}\n{model}\n' for n, model in enumerate(self)])
@@ -56,7 +58,7 @@ class Solution:
                 settings.loc[m, p] = s
                 solutions.remove((predicate, args))
         for predicate, args in solutions.copy():
-            if predicate == 'isRatio':
+            if predicate == 'hasRatio':
                 m, c, r = args.split(',')
                 m = int(m)
                 r = int(r)
@@ -126,17 +128,19 @@ class Solution:
         
         timeDiff = int((now-self.t0).total_seconds()//1)
 
-        if self.classicDisplay:
-            timeStr = now.time().strftime('%H:%M:%S')
+        timeStr = now.time().strftime('%H:%M:%S')
+        modelStats = str(model)
+        if type(model) != str: 
+            score = str(model.cost[0])
 
-            answer  = f'{timeStr} Answer: {self.lenModels}\n'
-            answer += f'{timeStr} {modelStats:=str(model)}\n'
-            answer += f'{timeStr} Optimization: {score:=str(model.cost[0])}\n'
+        answer  = f'{timeStr} Answer: {self.lenModels}\n'
+        answer += f'{timeStr} {modelStats}\n'
+        answer += f'{timeStr} Optimization: {score}\n'
 
-            with open('solved.txt', 'a') as file:
-                file.write(answer)
-
-        else:
+        with open(self.resultFile, 'a') as file:
+            file.write(answer)
+    
+        if not self.classicDisplay:
             modelStats, realScore, var = self.traverseModel(model)
             if type(model) != str: 
                 score = model.cost[0]
@@ -145,9 +149,9 @@ class Solution:
             answer += f'{modelStats}\n'
             answer += f'Optimization: {score}[{realScore}|{var}]\n'
 
+            self.modelScores[timeDiff] = (timeDiff, modelStats, score, realScore, var)
+        
         if not quiet: print(answer)
-
-        self.modelScores[timeDiff] = (timeDiff, modelStats, score, realScore, var)
 
         if type(model) != str: 
             self.models.append((model, model.symbols(atoms=True)))
@@ -203,9 +207,35 @@ def processCommandLineArguments():
                                      description='')
 
     # add all arguments
-    parser.add_argument('-p', '--pumps', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
-    parser.add_argument('-c', '--components', nargs='+', action='extend', type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', s, lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))))
-    parser.add_argument('-e', '--error', default=1, type=lambda s: validate('\d+', s, int))
+    parser.add_argument('-p', 
+                        '--pumps', 
+                        nargs='+', 
+                        action='extend', 
+                        type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', 
+                        s, 
+                        lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))), 
+                        help="sequence of pumps according to the scheme (<name>, <startInterval>, <endInterval>, <stepSize>) which needs to be quoted. The intervall is a fully closed one."
+    )
+    parser.add_argument('-c', 
+                        '--components', 
+                        nargs='+', 
+                        action='extend', 
+                        type=lambda s: validate('\((\w+), (\d+), (\d+), (\d+)\)', 
+                        s, 
+                        lambda x: (str(x[0]), int(x[1]), int(x[2]), int(x[3]))),
+                        help="sequence of components according to the scheme (<name>, <startInterval>, <endInterval>, <count>) which needs to be quoted. The intervall is a fully closed one."
+    )
+    parser.add_argument('-e', 
+                        '--error', 
+                        default=1, 
+                        type=lambda s: validate('\d+', 
+                        s, 
+                        int),
+                        help="An integer specifying the allowed error in the calculation of the ratios. Higher values typically yield lower quality solution but cuts down on execution time and memory usage. Thus higher values might be required for larger problem instances. In general errors exceeding any components interval in forced rounding or errors exceeding half of any components interval in safe rounding should be avoided."
+    )
+    parser.add_argument('--force', action="store_true")
+    parser.add_argument('--safe', action="store_true")
+    parser.add_argument('--raw', action="store_true")
     
     args = parser.parse_args()
 
@@ -222,6 +252,8 @@ def processCommandLineArguments():
             parser.error(f'step of pump {name} must be a positive number')
     if args.error == 0:
         parser.error('error must be strictly greater than 0')
+    if args.force == args.safe:
+        parser.error('either force or safe rounding must be set via "--force" or "--safe" respectively')
     
     return args
 
@@ -230,7 +262,7 @@ def generateFacts(args, templates:dict):
     specificTemplates = dict()
     for type, template in templates.items():
         if type == 'components':
-            template = template['modes'][template['active']]
+            template = template['modes']["force" if args.force else "safe"]
         i = 0
         while re.search('\{\w+?\}', template) != None:
             template = re.sub('\{\w+?\}', '{x['+str(i)+']}', template, count=1)
@@ -283,7 +315,7 @@ def main(dry:bool=False):
     ctl.configuration.solve.models = "0"
 
     print('Solving')
-    solution = Solution(config['classicDisplay'], config['weights'])
+    solution = Solution(args.raw, config['weights'])
     if (n:=config['count']) <= 0:
         # solve it and total number of models and time necessary
         t0 = time.time()
@@ -298,7 +330,7 @@ def main(dry:bool=False):
                 solution.addModel(model)
             t1 = time.time() - t0
     
-    print(t1, end='s\n')
+    # print(t1, end='s\n')
 
 
 if __name__ == '__main__':

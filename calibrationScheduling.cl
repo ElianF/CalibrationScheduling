@@ -37,20 +37,20 @@ hasRatio(M, C, R) :- validMess(M, P, S, C),
 
 % soft constraints
 % minimize variance by maximizing minimal distance between ratios
-% effectiveCoverage(C, ECov) :- defComp(C, Lo, Hi, D, N, Z),
-%                               C != x,
-%                               Dmin = #min{_R-_R' : hasRatio(_M, C, _R), hasRatio(_M', C, _R'), _M != _M', _R >= _R'},
-%                               Nreal = #count{_M : validMess(_M, _P, _S, C)},
-%                               ECov = Dmin * (Nreal-1),
-%                               N <= Nreal,
-%                               0 <= ECov,
-%                               ECov <= 100.
-% #minimize{ (1 * 100 * D) / (ECov + 1), C : 
-%                 effectiveCoverage(C, ECov), 
-%                 defComp(C, Lo, Hi, D, N, Z)}.
-var(C, V) :- isComp(C), C != x,
-             X = #sum{_R, _M : hasRatio(_M, C, _R)},
-             N = #count{_M : validMess(_M, _P, _S, C)},
-             Y = #sum{(_R)^2, _M : hasRatio(_M, C, _R)},
-             V = Y / N.
-#minimize{V, C : var(C, V)}.
+effectiveCoverage(C, ECov) :- defComp(C, Lo, Hi, D, N, Z),
+                              C != x,
+                              Dmin = #min{_R-_R' : hasRatio(_M, C, _R), hasRatio(_M', C, _R'), _M != _M', _R >= _R'},
+                              Nreal = #count{_M : validMess(_M, _P, _S, C)},
+                              ECov = Dmin * (Nreal-1),
+                              N <= Nreal,
+                              0 <= ECov,
+                              ECov <= 100.
+#minimize{ (1 * 100 * D) / (ECov + 1), C : 
+                effectiveCoverage(C, ECov), 
+                defComp(C, Lo, Hi, D, N, Z)}.
+% var(C, V) :- isComp(C), C != x,
+%              X = #sum{_R, _M : hasRatio(_M, C, _R)},
+%              N = #count{_M : validMess(_M, _P, _S, C)},
+%              Y = #sum{(_R)^2, _M : hasRatio(_M, C, _R)},
+%              V = Y / N.
+% #minimize{V, C : var(C, V)}.% 
